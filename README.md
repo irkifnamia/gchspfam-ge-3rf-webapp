@@ -47,9 +47,15 @@ $env:NEON_DATABASE_URL = "postgresql://..."
 .\.venv\Scripts\python.exe scripts\validate_neon.py
 .\.venv\Scripts\python.exe scripts\verify_neon_source_parity.py
 .\.venv\Scripts\python.exe scripts\provision_readonly_role.py
+.\.venv\Scripts\python.exe scripts\verify_readonly_connection.py
 ```
 
 The candidate import is partition-aware and resumable. Each of the 48 source Parquet files is recorded in `research.import_manifest` with its SHA-256 digest and row count.
+
+`verify_readonly_connection.py` uses the ignored `.streamlit/secrets.toml`
+connection and fails unless it reaches the expected pooled read-only role,
+observes the authoritative row counts, and confirms that actual INSERT and
+CREATE statements are rejected.
 
 See [Architecture](docs/ARCHITECTURE.md) for the lossless normalized candidate
 storage design and [Deployment](docs/DEPLOYMENT.md) for the credential-safe

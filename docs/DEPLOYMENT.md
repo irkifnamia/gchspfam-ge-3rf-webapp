@@ -54,8 +54,23 @@ Run the idempotent provisioning script with the administrative connection:
 
 It creates `gchspfam_webapp_reader` without a password, grants SELECT-only
 access, and verifies that INSERT, UPDATE, DELETE, CREATE, and TRUNCATE are
-unavailable. Set or reset a strong password for this role in Neon, then obtain
-its pooled connection string.
+unavailable. Because this is a SQL-created role, Neon Console may report
+`cannot update password for role without password` if its reset dialog is
+used. Set the initial password once through an administrator SQL connection,
+then use the role's pooled connection string. Do not use the owner connection
+in Streamlit.
+
+After saving the pooled URL in the ignored `.streamlit/secrets.toml`, verify
+both the connection identity and enforced permissions:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\verify_readonly_connection.py
+```
+
+The command must report `PASS`. It checks the expected role and authoritative
+record counts and safely confirms that real INSERT and CREATE probes are
+rejected. It will not issue mutation probes through an unexpectedly privileged
+connection.
 
 ## 4. GitHub
 

@@ -1,5 +1,6 @@
 {
   "validated_at_utc": "2026-10-26T10:20:35.8167661Z",
+  "readonly_connection_verified_at_utc": "2026-10-26T13:44:41.0071715Z",
   "overall_status": "PASS",
   "database": {
     "candidate_records": 2592000,
@@ -44,6 +45,14 @@
     "insert": false,
     "update": false,
     "delete": false,
-    "truncate": false
+    "truncate": false,
+    "runtime_connection_verified": true,
+    "pooled_hostname": true,
+    "sslmode_required": true,
+    "insert_statement_rejected": true,
+    "create_statement_rejected": true,
+    "streamlit_pages_tested_against_neon": 8,
+    "streamlit_pages_verified_at_utc": "2026-10-26T13:49:12.7379785Z",
+    "streamlit_page_exceptions": 0
   }
 }
