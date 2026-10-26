@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import sys
@@ -116,6 +117,35 @@ def copy_rows(
             copy.write_row(tuple(python_value(value) for value in row))
             count += 1
     return count
+
+
+def copy_frame_csv(
+    connection: psycopg.Connection[Any],
+    table: str,
+    frame: pd.DataFrame,
+) -> int:
+    """Stream a DataFrame through PostgreSQL's buffered CSV COPY protocol.
+
+    Seventeen significant digits preserve round-trip binary64 values. CSV
+    quoting is delegated to pandas, and ``\\N`` is the explicit SQL NULL token.
+    """
+    statement = sql.SQL("COPY {}.{} ({}) FROM STDIN WITH (FORMAT CSV, NULL '\\N')").format(
+        sql.Identifier("research"),
+        sql.Identifier(table),
+        sql.SQL(", ").join(map(sql.Identifier, frame.columns)),
+    )
+    buffer = io.StringIO()
+    frame.to_csv(
+        buffer,
+        index=False,
+        header=False,
+        na_rep="\\N",
+        float_format="%.17g",
+        lineterminator="\n",
+    )
+    with connection.cursor() as cursor, cursor.copy(statement) as copy:
+        copy.write(buffer.getvalue())
+    return len(frame)
 
 
 def mark_manifest(
@@ -227,35 +257,25 @@ def import_candidates(connection: psycopg.Connection[Any], results_root: Path) -
                 connection.execute("delete from research.candidate_fact where source_part=%s", (path.name,))
                 mark_manifest(connection, "candidates", path.name, digest, source_rows, 0, "running")
                 imported = 0
-                for batch in parquet.iter_batches(batch_size=10_000):
+                for batch in parquet.iter_batches(batch_size=100_000):
                     frame = batch.to_pandas()
                     identifiers = [
                         unit_ids[(str(scenario_id), str(prior_id))]
                         for scenario_id, prior_id in zip(frame.scenario_id, frame.prior_id, strict=True)
                     ]
-                    fact = frame[CANDIDATE_FACT_COLUMNS]
-                    rows = (
-                        (unit_id, *tuple(row), path.name)
-                        for unit_id, row in zip(
-                            identifiers,
-                            fact.itertuples(index=False, name=None),
-                            strict=True,
-                        )
-                    )
-                    imported += copy_rows(
-                        connection,
-                        "candidate_fact",
-                        ["analysis_unit_id", *CANDIDATE_FACT_COLUMNS, "source_part"],
-                        rows,
-                    )
+                    fact = frame[CANDIDATE_FACT_COLUMNS].copy()
+                    fact.insert(0, "analysis_unit_id", identifiers)
+                    fact["source_part"] = path.name
+                    imported += copy_frame_csv(connection, "candidate_fact", fact)
                 if imported != source_rows:
                     raise ValueError(f"{path.name}: imported {imported}, expected {source_rows}")
                 mark_manifest(connection, "candidates", path.name, digest, source_rows, imported, "complete")
             imported_total += imported
             print(f"candidates [{position:02d}/48]: imported {imported:,} rows from {path.name}")
         except Exception:
-            with connection.transaction():
-                mark_manifest(connection, "candidates", path.name, digest, source_rows, 0, "failed")
+            if not connection.broken:
+                with connection.transaction():
+                    mark_manifest(connection, "candidates", path.name, digest, source_rows, 0, "failed")
             raise
     if imported_total != EXPECTED["candidates"]:
         raise ValueError(f"Candidate import total {imported_total:,} != {EXPECTED['candidates']:,}")

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 
@@ -22,6 +25,8 @@ counts = repository.dataset_counts()
 selected = repository.selected_plans()
 matched = repository.matched_results()
 identities = validate_selected_identities(selected)
+deployment_path = Path(__file__).resolve().parents[1] / "data" / "neon_deployment_validation.json"
+deployment = json.loads(deployment_path.read_text(encoding="utf-8")) if deployment_path.is_file() else {}
 
 count_rows = [
     {
@@ -87,6 +92,22 @@ if summary:
     with st.expander("Documented warnings and limitations"):
         for warning in summary.get("warnings", []):
             st.write(f"- {warning}")
+
+if deployment:
+    st.subheader("Neon deployment validation")
+    database = deployment["database"]
+    parity = deployment["source_parity"]
+    role = deployment["readonly_role"]
+    columns = st.columns(5)
+    columns[0].metric("Deployment status", deployment["overall_status"])
+    columns[1].metric("Candidate rows", f"{database['candidate_records']:,}")
+    columns[2].metric("Database size", f"{database['database_mib']:.2f} MiB")
+    columns[3].metric("Source mismatches", parity["candidate_sample_cell_mismatches"])
+    columns[4].metric("Read-only role", "PASS" if role["select"] and not role["insert"] else "FAIL")
+    st.caption(
+        "Transport parity used all selected, matched, and fixed-OC records plus 25,920 deterministic candidate rows "
+        "covering g ∈ {1, 2, 250, 499, 500} for every prior–scenario unit."
+    )
 
 st.subheader("Research-ready downloads")
 left, right = st.columns(2)

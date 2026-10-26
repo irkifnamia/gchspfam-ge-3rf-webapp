@@ -45,6 +45,8 @@ $env:NEON_DATABASE_URL = "postgresql://..."
 .\.venv\Scripts\python.exe scripts\load_neon.py --apply-schema
 .\.venv\Scripts\python.exe scripts\load_neon.py --all
 .\.venv\Scripts\python.exe scripts\validate_neon.py
+.\.venv\Scripts\python.exe scripts\verify_neon_source_parity.py
+.\.venv\Scripts\python.exe scripts\provision_readonly_role.py
 ```
 
 The candidate import is partition-aware and resumable. Each of the 48 source Parquet files is recorded in `research.import_manifest` with its SHA-256 digest and row count.

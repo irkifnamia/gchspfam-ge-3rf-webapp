@@ -24,6 +24,7 @@ to `.streamlit/admin_secrets.toml` and edit the ignored local copy in VS Code.
 $env:NEON_DATABASE_URL = "postgresql://ADMIN_USER:ADMIN_PASSWORD@DIRECT_HOST/neondb?sslmode=require"
 .\.venv\Scripts\python.exe scripts\load_neon.py --all
 .\.venv\Scripts\python.exe scripts\validate_neon.py
+.\.venv\Scripts\python.exe scripts\verify_neon_source_parity.py
 Remove-Item Env:\NEON_DATABASE_URL
 ```
 
@@ -45,9 +46,16 @@ order by pg_total_relation_size(oid) desc;
 
 ## 3. Read-only application role
 
-Run `db/readonly_role.sql.example` with an administrative connection, then set
-a strong password outside Git. Obtain the pooled connection string for that
-role. Verify that INSERT, UPDATE, DELETE, CREATE, and TRUNCATE are rejected.
+Run the idempotent provisioning script with the administrative connection:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\provision_readonly_role.py
+```
+
+It creates `gchspfam_webapp_reader` without a password, grants SELECT-only
+access, and verifies that INSERT, UPDATE, DELETE, CREATE, and TRUNCATE are
+unavailable. Set or reset a strong password for this role in Neon, then obtain
+its pooled connection string.
 
 ## 4. GitHub
 

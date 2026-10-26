@@ -1,0 +1,49 @@
+{
+  "validated_at_utc": "2026-10-26T10:20:35.8167661Z",
+  "overall_status": "PASS",
+  "database": {
+    "candidate_records": 2592000,
+    "candidate_partitions": 48,
+    "analysis_units": 5184,
+    "selected_records": 15552,
+    "matched_records": 5184,
+    "fixed_oc_records": 15552,
+    "database_bytes": 534077440,
+    "database_mib": 509.3359375
+  },
+  "full_database_checks": {
+    "duplicate_key_failures": 0,
+    "selected_feasibility_failures": 0,
+    "sample_size_failures": 0,
+    "classical_prior_independence_failures": 0,
+    "design_ratio_invariance_failures": 0,
+    "selected_minimality_failures": 0,
+    "selected_risk_sum_max_error": 1.1102230246251565e-16,
+    "selected_lp1_max_error": 1.1102230246251565e-16,
+    "selected_lp2_max_error": 0.0,
+    "candidate_risk_sum_max_error": 1.1102230246251565e-16,
+    "candidate_lp1_max_error": 2.220446049250313e-16,
+    "candidate_lp2_max_error": 0.0,
+    "candidate_sample_size_max_error": 0.0
+  },
+  "source_parity": {
+    "candidate_sample_rows": 25920,
+    "candidate_sample_g": [1, 2, 250, 499, 500],
+    "candidate_sample_cell_mismatches": 0,
+    "selected_rows_compared": 15552,
+    "matched_rows_compared": 5184,
+    "fixed_oc_rows_compared": 15552,
+    "noncandidate_cell_mismatches": 0,
+    "maximum_absolute_error": 0.0
+  },
+  "readonly_role": {
+    "name": "gchspfam_webapp_reader",
+    "schema_usage": true,
+    "schema_create": false,
+    "select": true,
+    "insert": false,
+    "update": false,
+    "delete": false,
+    "truncate": false
+  }
+}
