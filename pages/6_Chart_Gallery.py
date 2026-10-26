@@ -7,9 +7,9 @@ import streamlit as st
 from src.runtime import get_repository
 from src.ui import render_data_source_badge, render_footer, render_page_header
 
-st.set_page_config(page_title="Academic Chart Gallery", page_icon="🖼️", layout="wide")
+st.set_page_config(page_title="Chart Gallery", page_icon="🖼️", layout="wide")
 render_page_header(
-    "Academic Chart Gallery",
+    "Chart Gallery",
     "Browse all 39 validated Stage 9 figures alongside the interactive analyses.",
 )
 repository = get_repository()

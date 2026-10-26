@@ -12,7 +12,7 @@ from src.ui import render_data_source_badge, render_footer, render_page_header
 
 st.set_page_config(page_title="OC Explorer", page_icon="📈", layout="wide")
 render_page_header(
-    "Operating Characteristic Explorer",
+    "OC Explorer",
     "Hold the consumer-risk-selected plan fixed while evaluating acceptance across mean-life ratios.",
 )
 repository = get_repository()

@@ -6,7 +6,6 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS
 from src.metrics import first_feasible_groups
 from src.runtime import get_repository
@@ -66,20 +65,23 @@ with st.spinner(f"Loading all 500 candidate group counts for {scenario_id} / {lo
 st.caption(f"Loaded prior–scenario unit: {scenario_id} / {loaded_prior}")
 selected_g = first_feasible_groups(trace)
 
-risk_columns = {"Classical": "cr", "Average": "acr", "Bayesian": "bcr"}
+risk_columns = {
+    "Classical": {"consumer": "cr", "producer": "pr", "sum": "msr"},
+    "Average": {"consumer": "acr", "producer": "apr", "sum": "msar"},
+    "Bayesian": {"consumer": "bcr", "producer": "bpr", "sum": "msbr"},
+}
 summary_rows = []
-for framework, risk_column in risk_columns.items():
+for framework, columns in risk_columns.items():
     g_value = selected_g[framework]
     selected_row = trace.loc[trace["candidate_g"] == g_value].iloc[0] if g_value is not None else None
-    previous = trace.loc[trace["candidate_g"] == g_value - 1] if g_value is not None else pd.DataFrame()
     summary_rows.append(
         {
             "Framework": framework,
             "Selected g*": g_value,
             "Selected n*": None if selected_row is None else int(selected_row["candidate_n"]),
-            "Own consumer risk": None if selected_row is None else float(selected_row[risk_column]),
-            "Risk at g*−1": None if previous.empty else float(previous.iloc[0][risk_column]),
-            "Minimality verified": bool(g_value == 1 or (not previous.empty and previous.iloc[0][risk_column] > 0.10)),
+            "Own producer risk": None if selected_row is None else float(selected_row[columns["producer"]]),
+            "Own consumer risk": None if selected_row is None else float(selected_row[columns["consumer"]]),
+            "Own risk sum": None if selected_row is None else float(selected_row[columns["sum"]]),
         }
     )
 summary = pd.DataFrame(summary_rows)
@@ -88,37 +90,11 @@ st.dataframe(
     width="stretch",
     hide_index=True,
     column_config={
+        "Own producer risk": st.column_config.NumberColumn(format="%.10f"),
         "Own consumer risk": st.column_config.NumberColumn(format="%.10f"),
-        "Risk at g*−1": st.column_config.NumberColumn(format="%.10f"),
+        "Own risk sum": st.column_config.NumberColumn(format="%.10f"),
     },
 )
-
-consumer = trace[["candidate_g", "cr", "acr", "bcr"]].rename(
-    columns={"cr": "Classical", "acr": "Average", "bcr": "Bayesian"}
-)
-consumer_long = consumer.melt(id_vars="candidate_g", var_name="framework", value_name="consumer_risk")
-figure = px.line(
-    consumer_long,
-    x="candidate_g",
-    y="consumer_risk",
-    color="framework",
-    color_discrete_map=FRAMEWORK_COLORS,
-    labels={"candidate_g": "Candidate g", "consumer_risk": "Own consumer risk"},
-)
-figure.add_hline(y=0.10, line_dash="dash", line_color="#A33A3A", annotation_text="Risk ceiling 0.10")
-for framework, risk_column in risk_columns.items():
-    g_value = selected_g[framework]
-    if g_value is not None:
-        risk_value = float(trace.loc[trace["candidate_g"] == g_value, risk_column].iloc[0])
-        figure.add_scatter(
-            x=[g_value],
-            y=[risk_value],
-            mode="markers",
-            marker={"size": 12, "color": FRAMEWORK_COLORS[framework], "line": {"color": "white", "width": 2}},
-            name=f"{framework} g*={g_value}",
-            hovertemplate=f"{framework} g*={g_value}<br>risk={risk_value:.10f}<extra></extra>",
-        )
-st.plotly_chart(apply_academic_layout(figure, "Consumer-risk paths and selected g*"), width="stretch")
 
 st.markdown("#### All candidate g values")
 candidate_table = trace[

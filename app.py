@@ -12,14 +12,14 @@ from src.runtime import get_repository
 from src.ui import render_data_source_badge, render_footer, render_page_header
 
 st.set_page_config(
-    page_title="GChSPFAM-GE-3RF Research Analytics",
+    page_title="Overview",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 render_page_header(
-    "GChSPFAM-GE-3RF Research Analytics",
+    "Overview",
     "Interactive exploration of consumer-risk-restricted Group Chain Sampling Plans under the corrected Generalized Exponential model.",
 )
 
@@ -68,16 +68,16 @@ with right:
 st.subheader("How to use this dashboard")
 st.markdown(
     """
-- **Selected Plan Explorer** inspects all six risks at each framework-selected plan.
-- **Framework Comparison** performs matched comparisons without treating differently conditioned own risks as equivalent.
-- **Head-to-Head Comparison** reports three-framework g* and L(p) wins and ties for matched or all-available records.
+- **Phases** documents the validated Phase 3–9 mathematical workflow with collapsible details.
+- **All Candidate Explorer** displays any chosen subset of the 31 candidate columns across all 500 group counts.
+- **Selected Plan Explorer** provides an industry-oriented review of one specific sampling plan.
+- **Selected g Explorer** presents CR, ACR, and BCR candidate tables and matched-scenario g* heatmaps.
 - **OC Explorer** examines fixed-plan acceptance across mean-life ratios.
 - **Sensitivity Explorer** studies GE shape, termination multiplier, mean-life ratio, GChSP parameters, and Beta prior.
-- **All Candidate Explorer** displays any chosen subset of the 31 candidate columns across all 500 group counts.
-- **Selected g Explorer** traces CR, ACR, and BCR selection and compares framework-selected g* using matched-scenario heatmaps.
-- **Computation Phases** documents the validated Phase 3–9 mathematical workflow with collapsible details.
+- **General Comparison** performs matched comparisons without treating differently conditioned own risks as equivalent.
+- **Head-to-Head Comparison** reports three-framework g* and L(p) wins and ties for matched or all-available records.
 - **Chart Gallery** provides the complete set of 39 validated Stage 9 academic figures.
-- **Validation & Downloads** exposes reproducibility evidence and research-ready extracts.
+- **Downloads** provides research-ready extracts for offline use.
 """
 )
 

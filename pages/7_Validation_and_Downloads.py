@@ -1,122 +1,99 @@
-"""Reproducibility evidence and validated extracts."""
+"""Download research-ready datasets, candidate traces, and academic charts."""
 
 from __future__ import annotations
 
-import json
+from io import BytesIO
 from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
-import pandas as pd
 import streamlit as st
 
-from src.constants import EXPECTED_COUNTS
-from src.metrics import validate_selected_identities
-from src.repository import assert_expected_counts
 from src.runtime import get_repository
-from src.ui import dataframe_download, render_data_source_badge, render_footer, render_page_header
+from src.ui import dataframe_download, render_page_header
 
-st.set_page_config(page_title="Validation and Downloads", page_icon="✅", layout="wide")
+
+@st.cache_data(show_spinner=False)
+def chart_archive(paths: tuple[str, ...]) -> bytes:
+    """Create one deterministic ZIP archive from the packaged chart files."""
+    buffer = BytesIO()
+    with ZipFile(buffer, "w", compression=ZIP_DEFLATED) as archive:
+        for path_text in paths:
+            path = Path(path_text)
+            archive.write(path, arcname=path.name)
+    return buffer.getvalue()
+
+
+st.set_page_config(page_title="Downloads", page_icon="⬇️", layout="wide")
 render_page_header(
-    "Validation and Reproducibility",
-    "Confirm data integrity, mathematical identities, source provenance, and downloadable research extracts.",
+    "Downloads",
+    "Download research-ready selected plans, matched results, OC evaluations, candidate traces, and figures.",
 )
+
 repository = get_repository()
-render_data_source_badge(repository)
-counts = repository.dataset_counts()
 selected = repository.selected_plans()
 matched = repository.matched_results()
-identities = validate_selected_identities(selected)
-deployment_path = Path(__file__).resolve().parents[1] / "data" / "neon_deployment_validation.json"
-deployment = json.loads(deployment_path.read_text(encoding="utf-8")) if deployment_path.is_file() else {}
+fixed_oc = repository.fixed_plan_oc()
 
-count_rows = [
-    {
-        "dataset": name,
-        "observed": counts.get(name),
-        "expected": expected,
-        "status": "PASS" if counts.get(name) == expected else "FAIL",
-    }
-    for name, expected in EXPECTED_COUNTS.items()
-]
-st.subheader("Dataset contract")
-st.dataframe(pd.DataFrame(count_rows), width="stretch", hide_index=True)
+st.subheader("Research-ready analytical datasets")
+cards = st.columns(3)
+with cards[0]:
+    st.markdown("#### Selected plans")
+    st.metric("Records", f"{len(selected):,}")
+    st.write("All Classical, Average, and Bayesian framework-selected plans with all six risks and three risk sums.")
+    dataframe_download(selected, "selected_plans_research_ready.csv", "Download selected plans (CSV)")
+with cards[1]:
+    st.markdown("#### Matched framework results")
+    st.metric("Prior–scenario units", f"{len(matched):,}")
+    st.write("One wide record per matched prior–scenario unit for direct three-framework comparison.")
+    dataframe_download(matched, "matched_framework_results.csv", "Download matched results (CSV)")
+with cards[2]:
+    st.markdown("#### Fixed-plan OC evaluations")
+    st.metric("Records", f"{len(fixed_oc):,}")
+    st.write("Acceptance probabilities for each selected plan across the six evaluation mean-life ratios.")
+    dataframe_download(fixed_oc, "fixed_plan_oc_evaluations.csv", "Download fixed-plan OC (CSV)")
 
-try:
-    assert_expected_counts(counts)
-    st.success("All authoritative record counts match the validated research package.")
-except ValueError as exc:
-    st.error(str(exc))
-
-st.subheader("Selected-plan mathematical identities")
-identity_rows = pd.DataFrame(
-    [
-        {
-            "check": "Maximum risk-sum identity error",
-            "value": identities["risk_sum_error"],
-            "status": "PASS" if identities["risk_sum_error"] <= 5e-12 else "FAIL",
-        },
-        {
-            "check": "Maximum L(p₁)=1−PR error",
-            "value": identities["lp1_error"],
-            "status": "PASS" if identities["lp1_error"] <= 5e-12 else "FAIL",
-        },
-        {
-            "check": "Maximum L(p₂)=CR error",
-            "value": identities["lp2_error"],
-            "status": "PASS" if identities["lp2_error"] <= 5e-12 else "FAIL",
-        },
-        {
-            "check": "Maximum n*=r×g* error",
-            "value": identities["sample_size_error"],
-            "status": "PASS" if identities["sample_size_error"] == 0 else "FAIL",
-        },
-        {
-            "check": "Consumer-risk feasibility failures",
-            "value": identities["feasibility_failures"],
-            "status": "PASS" if identities["feasibility_failures"] == 0 else "FAIL",
-        },
-    ]
+st.divider()
+st.subheader("Candidate-level extract")
+st.write(
+    "Choose one prior–scenario unit to download all 500 candidate group counts and all candidate-level risk measures."
 )
-st.dataframe(identity_rows, width="stretch", hide_index=True)
+index = repository.scenario_prior_index()
+with st.form("download_candidate_selector"):
+    controls = st.columns(2)
+    prior_id = controls[0].selectbox("Beta prior", sorted(index["prior_id"].unique()))
+    scenario_id = controls[1].selectbox("Scenario", sorted(index["scenario_id"].unique()))
+    prepare_candidate = st.form_submit_button("Prepare candidate extract", type="primary")
 
-summary = repository.validation_summary()
-if summary:
-    st.subheader("Stage 10 final verification")
-    metrics = summary.get("metrics", {})
-    columns = st.columns(4)
-    columns[0].metric("Overall status", summary.get("overall_status", "Unknown"))
-    columns[1].metric("Independent cases", f"{metrics.get('independent_cases', 0):,}")
-    columns[2].metric(
-        "Maximum absolute discrepancy", f"{metrics.get('independent_max_absolute_error', float('nan')):.3e}"
-    )
-    columns[3].metric("Warnings", len(summary.get("warnings", [])))
-    with st.expander("Documented warnings and limitations"):
-        for warning in summary.get("warnings", []):
-            st.write(f"- {warning}")
+if prepare_candidate:
+    valid = index[(index["scenario_id"] == scenario_id) & (index["prior_id"] == prior_id)]
+    if valid.empty:
+        st.error("The selected scenario and prior do not form a valid research unit.")
+    else:
+        st.session_state["download_candidate_selection"] = (str(scenario_id), str(prior_id))
 
-if deployment:
-    st.subheader("Neon deployment validation")
-    database = deployment["database"]
-    parity = deployment["source_parity"]
-    role = deployment["readonly_role"]
-    columns = st.columns(5)
-    columns[0].metric("Deployment status", deployment["overall_status"])
-    columns[1].metric("Candidate rows", f"{database['candidate_records']:,}")
-    columns[2].metric("Database size", f"{database['database_mib']:.2f} MiB")
-    columns[3].metric("Source mismatches", parity["candidate_sample_cell_mismatches"])
-    columns[4].metric("Read-only role", "PASS" if role["select"] and not role["insert"] else "FAIL")
-    st.caption(
-        "Transport parity used all selected, matched, and fixed-OC records plus 25,920 deterministic candidate rows "
-        "covering g ∈ {1, 2, 250, 499, 500} for every prior–scenario unit."
+candidate_selection = st.session_state.get("download_candidate_selection")
+if candidate_selection is not None:
+    loaded_scenario, loaded_prior = candidate_selection
+    with st.spinner(f"Preparing 500 candidate records for {loaded_scenario} / {loaded_prior}…"):
+        candidate_trace = repository.candidate_trace(loaded_scenario, loaded_prior)
+    st.success(f"Candidate extract ready: {loaded_scenario} / {loaded_prior} · {len(candidate_trace):,} records")
+    dataframe_download(
+        candidate_trace,
+        f"candidate_trace_{loaded_scenario}_{loaded_prior}.csv",
+        "Download candidate trace (CSV)",
     )
 
-st.subheader("Research-ready downloads")
-left, right = st.columns(2)
-with left:
-    dataframe_download(selected, "selected_plans_research_ready.csv", "Download all selected plans")
-with right:
-    dataframe_download(matched, "matched_framework_results.csv", "Download matched framework results")
-
-st.info(
-    "The complete 2,592,000-row candidate dataset is intentionally downloaded through filtered All Candidate Explorer extracts or the authoritative Parquet archive, not materialized in browser memory."
-)
-render_footer()
+st.divider()
+st.subheader("Academic figures")
+chart_paths = repository.chart_paths()
+st.write(f"Download the complete collection of {len(chart_paths)} high-resolution research figures as one ZIP file.")
+if chart_paths:
+    archive = chart_archive(tuple(str(path) for path in chart_paths))
+    st.download_button(
+        "Download all academic charts (ZIP)",
+        data=archive,
+        file_name="gchspfam_ge_3rf_academic_charts.zip",
+        mime="application/zip",
+    )
+else:
+    st.warning("No packaged chart files are currently available for download.")

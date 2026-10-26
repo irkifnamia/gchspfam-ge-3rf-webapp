@@ -62,9 +62,9 @@ def phase_card(number: int, title: str, summary: str, color: str) -> None:
     )
 
 
-st.set_page_config(page_title="Computation Phases", page_icon="🧭", layout="wide")
+st.set_page_config(page_title="Phases", page_icon="🧭", layout="wide")
 render_page_header(
-    "Phases of Results Computation",
+    "Phases",
     "A reproducible Phase 3–9 flow from the GChSP operating characteristic to framework comparison.",
 )
 st.markdown(

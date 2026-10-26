@@ -62,7 +62,7 @@ def winner_bar(data: pd.DataFrame, title: str) -> None:
 
 st.set_page_config(page_title="Head-to-Head Comparison", page_icon="🥇", layout="wide")
 render_page_header(
-    "Three-Framework Head-to-Head Comparison",
+    "Head-to-Head Comparison",
     "Compare selected g* and fixed-plan acceptance probability across Classical, Average, and Bayesian frameworks.",
 )
 repository = get_repository()

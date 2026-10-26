@@ -13,17 +13,17 @@ from src.constants import FRAMEWORKS
 ROOT = Path(__file__).resolve().parents[1]
 UUM_LOGO = ROOT / "assets" / "branding" / "uum.png"
 NAVIGATION_LINKS = (
+    ("pages/9_Computation_Phases.py", "PHASES"),
     ("app.py", "OVERVIEW"),
+    ("pages/5_Candidate_Explorer.py", "ALL CANDIDATE EXPLORER"),
     ("pages/1_Selected_Plan_Explorer.py", "SELECTED PLAN EXPLORER"),
-    ("pages/2_Framework_Comparison.py", "FRAMEWORK COMPARISON"),
-    ("pages/8_Head_to_Head_Comparison.py", "HEAD-TO-HEAD COMPARISON"),
+    ("pages/6_Selected_G_Explorer.py", "SELECTED G EXPLORER"),
     ("pages/3_OC_Explorer.py", "OC EXPLORER"),
     ("pages/4_Sensitivity_Explorer.py", "SENSITIVITY EXPLORER"),
-    ("pages/5_Candidate_Explorer.py", "ALL CANDIDATE EXPLORER"),
-    ("pages/6_Selected_G_Explorer.py", "SELECTED G EXPLORER"),
-    ("pages/9_Computation_Phases.py", "COMPUTATION PHASES"),
+    ("pages/2_Framework_Comparison.py", "GENERAL COMPARISON"),
+    ("pages/8_Head_to_Head_Comparison.py", "HEAD-TO-HEAD COMPARISON"),
     ("pages/6_Chart_Gallery.py", "CHART GALLERY"),
-    ("pages/7_Validation_and_Downloads.py", "VALIDATION AND DOWNLOADS"),
+    ("pages/7_Validation_and_Downloads.py", "DOWNLOADS"),
 )
 
 
@@ -91,16 +91,8 @@ def render_page_header(title: str, subtitle: str) -> None:
     )
 
 
-def render_data_source_badge(repository: Any) -> None:
-    if repository.backend_name == "neon":
-        if getattr(repository, "uses_packaged_analytics", False):
-            st.caption(
-                "Data source: validated packaged analytics · full candidate data from Neon PostgreSQL · read-only"
-            )
-        else:
-            st.caption("Data source: Neon PostgreSQL · read-only production connection")
-    else:
-        st.caption("Data source: validated local Stage 7–10 outputs · read-only mode")
+def render_data_source_badge(_repository: Any) -> None:
+    """Retained as a compatibility no-op; page-level source badges are hidden."""
 
 
 def sidebar_filters(options: dict[str, list[Any]], include_framework: bool = True) -> dict[str, list[Any]]:
@@ -145,8 +137,4 @@ def dataframe_download(data: pd.DataFrame, filename: str, label: str = "Download
 
 
 def render_footer() -> None:
-    st.divider()
-    st.caption(
-        "GChSPFAM-GE-3RF Research Analytics · Consumer-risk-only optimization · "
-        "Producer risks and risk sums are evaluation measures, not selection criteria."
-    )
+    """Retained as a compatibility no-op; pages do not display a repeated footer."""
