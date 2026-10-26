@@ -18,7 +18,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-render_page_header("Overview")
+# Pass an explicit empty subtitle so rolling Streamlit deployments remain
+# compatible with both the previous and current shared-header signatures.
+render_page_header("Overview", "")
 
 repository = get_repository()
 render_data_source_badge(repository)
