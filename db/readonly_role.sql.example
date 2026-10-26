@@ -1,0 +1,9 @@
+-- Replace the role name if desired. Set the password securely in the Neon
+-- console or psql; never commit a real password here.
+
+create role gchspfam_webapp_reader login;
+grant connect on database neondb to gchspfam_webapp_reader;
+grant usage on schema research to gchspfam_webapp_reader;
+grant select on all tables in schema research to gchspfam_webapp_reader;
+alter default privileges in schema research grant select on tables to gchspfam_webapp_reader;
+

@@ -1,0 +1,75 @@
+# Secure deployment runbook
+
+## 1. Local verification
+
+From the webapp directory:
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
+
+With no database secret configured, the app reads the validated sibling
+`gchspfam-ge-3rf-results` project in read-only mode.
+
+## 2. Neon administrative import
+
+Use the direct (non-pooled) Neon connection string for this one-time bulk
+load. Set it only in the current terminal; do not paste it into source files,
+GitHub, or chat.
+
+```powershell
+$env:NEON_DATABASE_URL = "postgresql://ADMIN_USER:ADMIN_PASSWORD@DIRECT_HOST/neondb?sslmode=require"
+.\.venv\Scripts\python.exe scripts\load_neon.py --all
+.\.venv\Scripts\python.exe scripts\validate_neon.py
+Remove-Item Env:\NEON_DATABASE_URL
+```
+
+The loader commits every candidate partition separately. A rerun checks the
+stored SHA-256 and row count, then skips each completed partition.
+
+After validation, inspect database size in Neon or with:
+
+```sql
+select pg_size_pretty(pg_database_size(current_database()));
+select relname, pg_size_pretty(pg_total_relation_size(oid))
+from pg_class
+where relnamespace = 'research'::regnamespace
+order by pg_total_relation_size(oid) desc;
+```
+
+## 3. Read-only application role
+
+Run `db/readonly_role.sql.example` with an administrative connection, then set
+a strong password outside Git. Obtain the pooled connection string for that
+role. Verify that INSERT, UPDATE, DELETE, CREATE, and TRUNCATE are rejected.
+
+## 4. GitHub
+
+Create the public repository `irkifnamia/gchspfam-ge-3rf-webapp`, then push the
+local `main` branch. Never commit `.streamlit/secrets.toml`, `.env`, database
+URLs, passwords, or the authoritative candidate Parquet files.
+
+The included GitHub Actions workflow installs dependencies, runs Ruff, and
+runs pytest on every push and pull request.
+
+## 5. Streamlit Community Cloud
+
+1. Create an app from `irkifnamia/gchspfam-ge-3rf-webapp` and select `app.py`.
+2. In app secrets, add only the pooled read-only URL:
+
+   ```toml
+   [database]
+   url = "postgresql+psycopg://READ_ONLY_USER:PASSWORD@POOLED_HOST/neondb?sslmode=require"
+   ```
+
+3. Deploy privately for verification, exercise all pages, and confirm the
+   Validation page reports the authoritative counts and identity checks.
+4. Make the Streamlit application public only after those checks pass.
+
+Official references:
+
+- Streamlit secrets: <https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management>
+- Streamlit Community Cloud: <https://docs.streamlit.io/deploy/streamlit-community-cloud>
+- Neon compute and pooled connections: <https://neon.com/docs/manage/endpoints/>

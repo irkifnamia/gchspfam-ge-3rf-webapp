@@ -1,0 +1,197 @@
+[
+  {
+    "filename": "A1_mean_selected_g.png",
+    "size_bytes": 69687,
+    "sha256": "b46c5a5cbc009c61145b15abb38647328ec06ebec3c2e61794170aa980835f55"
+  },
+  {
+    "filename": "A2_mean_selected_n.png",
+    "size_bytes": 60911,
+    "sha256": "ab3e64a2fbbc04d5bc81e4dfc5c9849dffdfa442dd342d52dbc7ebbea9bbc66f"
+  },
+  {
+    "filename": "A3_distribution_selected_g.png",
+    "size_bytes": 80567,
+    "sha256": "3c34bfe194b46a037674ab61323075f5eac51cc1aa68f44119d3096a25280dc0"
+  },
+  {
+    "filename": "A4_pairwise_g_differences.png",
+    "size_bytes": 123788,
+    "sha256": "4a310bbb5c8f590c9e8980ccc031501c275258ab890cd791afb2d225c2929bb8"
+  },
+  {
+    "filename": "A5_mean_Lp_across_ratios.png",
+    "size_bytes": 168195,
+    "sha256": "a3fbe81af15322b1115afca95f318919cd4041a1db1a88241aee7f6b9a506b18"
+  },
+  {
+    "filename": "A6_representative_OC_curves.png",
+    "size_bytes": 282965,
+    "sha256": "deb798614202b43349890dd6b94f36b6b294e6c83a45a32973d0756bf00dd825"
+  },
+  {
+    "filename": "A7_mean_Lp1.png",
+    "size_bytes": 70756,
+    "sha256": "72361f78b491eb110759c69b7a8515f4f613388788405711e00e10e1d35f6de3"
+  },
+  {
+    "filename": "A8_Lp1_differences.png",
+    "size_bytes": 143120,
+    "sha256": "a117c48bfe8ba219ed9bc15b071662be1761173d73ea7e567c963e80ce6ccb30"
+  },
+  {
+    "filename": "B10_common_risk_sums.png",
+    "size_bytes": 76706,
+    "sha256": "5373b708e074d67bac4c9fde4ffa5cff05bf40f1f7063069536c945d8cd18029"
+  },
+  {
+    "filename": "B1_own_producer_risk.png",
+    "size_bytes": 85749,
+    "sha256": "5e1e292a28e2344e3660aecdb61b965e14362b11bc1e7c895938a0c8d5d0ddc3"
+  },
+  {
+    "filename": "B2_own_consumer_risk.png",
+    "size_bytes": 84205,
+    "sha256": "78ee908132465299bf28e7e018ec6072660ed7f3f81ac259a5f37055d76a6a35"
+  },
+  {
+    "filename": "B3_own_risk_sum.png",
+    "size_bytes": 81426,
+    "sha256": "465bd1ebbb4b7edc8a2b963eb25506cad3f234756b4392a4653f940ba1a2095e"
+  },
+  {
+    "filename": "B4_common_PR.png",
+    "size_bytes": 81247,
+    "sha256": "dc292802b231537da3eed61469fd40cd1d8121441dd266e0e2f4b0fec7f8fd2f"
+  },
+  {
+    "filename": "B5_common_CR.png",
+    "size_bytes": 83238,
+    "sha256": "e6581a8657a976675acaccfb53cb467ff87981c7bf707fc8f3b82aa86e4d679a"
+  },
+  {
+    "filename": "B6_common_APR.png",
+    "size_bytes": 77472,
+    "sha256": "72aadf2955e7b1feb4bef6fec79b19c5f48ce099bc90dfc3e8f937096d2f0727"
+  },
+  {
+    "filename": "B7_common_ACR.png",
+    "size_bytes": 74449,
+    "sha256": "a0a580da81a7ae3fa9831b1c0f0654feaded2864432e8a64b09d73f2b0694932"
+  },
+  {
+    "filename": "B8_common_BPR.png",
+    "size_bytes": 79543,
+    "sha256": "284781344adb551a1091c6fd78f744705a2a3e6c499a7c147ff108ab36896081"
+  },
+  {
+    "filename": "B9_common_BCR.png",
+    "size_bytes": 74088,
+    "sha256": "9645da3c1f054d80b122802423bf69c48ef26460f5c24adf4a4ba0b0ab17c9e0"
+  },
+  {
+    "filename": "C1_GE_shape_sensitivity.png",
+    "size_bytes": 144989,
+    "sha256": "e3b4922ee5965d5894ce8a3a050e89fe2c6b27da90eda85536a55099e5cb996c"
+  },
+  {
+    "filename": "C2_termination_sensitivity.png",
+    "size_bytes": 147846,
+    "sha256": "d9b4ba53ebf758e455014ef2648a0f5db5f869af4726a9cb9a363428d687dbef"
+  },
+  {
+    "filename": "C3_GChSP_sensitivity.png",
+    "size_bytes": 157384,
+    "sha256": "25f2c2f24f2e3d530b9b3cd4b1e6b375e2b1600de4752e2cc67e8398a908d112"
+  },
+  {
+    "filename": "C4_Beta_prior_sensitivity.png",
+    "size_bytes": 150510,
+    "sha256": "a56db2d6055222cb008453f6804c941cc0673047f0cf440b54405ece26188589"
+  },
+  {
+    "filename": "C5_mean_ratio_sensitivity.png",
+    "size_bytes": 200301,
+    "sha256": "4015d8c534467936e36dd3184502f6e4f1afcb15550903de0537549dba77a1ab"
+  },
+  {
+    "filename": "D1_mean_discrimination_gap.png",
+    "size_bytes": 80832,
+    "sha256": "2c26bbe7819c84de83cdac2bedd5a5b240b316115c99c35a9a5c21e3e2294737"
+  },
+  {
+    "filename": "D2_gap_GE_shape_sensitivity.png",
+    "size_bytes": 161826,
+    "sha256": "e50604181b753303852b1100e940bfddcaee3a4f1f634c44271c69d202cf3e65"
+  },
+  {
+    "filename": "D3_sampling_vs_discrimination.png",
+    "size_bytes": 325848,
+    "sha256": "fb1357fb9897519a3c083315ce7adfbb6f7b8bdcb1b29e64d250e951078080f6"
+  },
+  {
+    "filename": "E01_pairwise_g.png",
+    "size_bytes": 132899,
+    "sha256": "c22cb65ae3bbda7768335fc6ce423b12e93b854a7bcbfaab9f78338e5d739c3b"
+  },
+  {
+    "filename": "E02_pairwise_n.png",
+    "size_bytes": 129737,
+    "sha256": "aa2b1527784b5ca6bc3b9ee595a637cc29af6450f1473de28590dcffcb26548f"
+  },
+  {
+    "filename": "E03_pairwise_Lp1.png",
+    "size_bytes": 140692,
+    "sha256": "1d2b383b33cc3ebaf30c384d625e3ce069d2ebed8bf6585058fa71690432a9b5"
+  },
+  {
+    "filename": "E04_pairwise_PR.png",
+    "size_bytes": 133830,
+    "sha256": "5f51a962027f27275bed1af8d7ef70a9d453d20d4f86ed7207e1f39fa78ae250"
+  },
+  {
+    "filename": "E05_pairwise_APR.png",
+    "size_bytes": 135704,
+    "sha256": "c7eac9e265d4b6a5975a0fb5b3ac5ce72fe13772dde8edefca554bd66a1bd6d5"
+  },
+  {
+    "filename": "E06_pairwise_BPR.png",
+    "size_bytes": 134158,
+    "sha256": "645b47e2d00023543adcfc36a2ab01e0866904fb8414f6e95c14d0aee58ef784"
+  },
+  {
+    "filename": "E07_pairwise_CR.png",
+    "size_bytes": 135445,
+    "sha256": "2165c084443bb65462b8d94adbd3bbb315b3b55b3d807eb52cbd7dd9057887e8"
+  },
+  {
+    "filename": "E08_pairwise_ACR.png",
+    "size_bytes": 137162,
+    "sha256": "1656190c448f55d2703d3918c8d96c1ebfeeefb145ceb463d88d041a46f27691"
+  },
+  {
+    "filename": "E09_pairwise_BCR.png",
+    "size_bytes": 136361,
+    "sha256": "76db1daf1f0b843ae2a53bf417319e585f3270ab8f98a2a719b1a40d09005ab5"
+  },
+  {
+    "filename": "E10_pairwise_MSR.png",
+    "size_bytes": 145110,
+    "sha256": "fb27ecd69b39489d279feed57ae9511ea4dd7fc4f3c8191db761d1b6eb38c9f9"
+  },
+  {
+    "filename": "E11_pairwise_MSAR.png",
+    "size_bytes": 137642,
+    "sha256": "624d33c9f6200fc86e10527db2457c5babe862d01881b6d90e5c452653de7762"
+  },
+  {
+    "filename": "E12_pairwise_MSBR.png",
+    "size_bytes": 146102,
+    "sha256": "b890c2aa6b964b21ebfc22a74052000dcc652fb9d17177e51aa4b56f32d405fe"
+  },
+  {
+    "filename": "E13_pairwise_discrimination_gap.png",
+    "size_bytes": 138491,
+    "sha256": "3bb579b63cd86763857999489eb8a307d13f9348195e1d50ebdfcb75618cb446"
+  }
+]
