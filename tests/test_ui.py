@@ -7,8 +7,8 @@ from src.ui import GLOBAL_FILTER_OPTIONS, NAVIGATION_LINKS, apply_global_filters
 
 def test_sidebar_navigation_order_and_labels():
     assert [label for _path, label in NAVIGATION_LINKS] == [
-        "PHASES",
         "OVERVIEW",
+        "PHASES",
         "ALL CANDIDATE EXPLORER",
         "SELECTED PLAN EXPLORER",
         "SELECTED G EXPLORER",

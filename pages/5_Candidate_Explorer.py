@@ -2,19 +2,36 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from src.runtime import get_repository
 from src.ui import apply_global_filters, dataframe_download, render_data_source_badge, render_footer, render_page_header
 
 RISK_GRADIENTS = {
-    "pr": "Blues",
-    "apr": "Greens",
-    "bpr": "YlOrBr",
-    "cr": "Purples",
-    "acr": "Oranges",
-    "bcr": "Reds",
+    "pr": ("#EAF2FB", "#17365D"),
+    "apr": ("#EAF6EF", "#2E7D5B"),
+    "bpr": ("#FFF7D6", "#C69200"),
+    "cr": ("#F2ECF9", "#6A3D9A"),
+    "acr": ("#FFF0E3", "#C75B12"),
+    "bcr": ("#FDEBEC", "#B4232D"),
 }
+
+
+def gradient_styles(series: pd.Series, light: str, dark: str) -> list[str]:
+    """Return dependency-free gradient CSS for one numerical risk column."""
+    minimum = float(series.min())
+    maximum = float(series.max())
+    span = maximum - minimum
+    light_rgb = tuple(int(light[index : index + 2], 16) for index in (1, 3, 5))
+    dark_rgb = tuple(int(dark[index : index + 2], 16) for index in (1, 3, 5))
+    styles = []
+    for value in series.astype(float):
+        weight = 0.0 if span == 0 else (value - minimum) / span
+        rgb = tuple(round(start + weight * (end - start)) for start, end in zip(light_rgb, dark_rgb, strict=True))
+        foreground = "#FFFFFF" if weight >= 0.58 else "#17202A"
+        styles.append(f"background-color: rgb{rgb}; color: {foreground}")
+    return styles
 
 
 def style_candidate_table(frame):
@@ -22,7 +39,12 @@ def style_candidate_table(frame):
     risk_columns = [column for column in RISK_GRADIENTS if column in frame.columns]
     styled = frame.style.format({column: "{:.8f}" for column in risk_columns})
     for column in risk_columns:
-        styled = styled.background_gradient(cmap=RISK_GRADIENTS[column], subset=[column], axis=0)
+        light, dark = RISK_GRADIENTS[column]
+        styled = styled.apply(
+            lambda series, light=light, dark=dark: gradient_styles(series, light, dark),
+            subset=[column],
+            axis=0,
+        )
     return styled
 
 

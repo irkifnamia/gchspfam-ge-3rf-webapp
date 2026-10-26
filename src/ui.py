@@ -11,8 +11,8 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 UUM_LOGO = ROOT / "assets" / "branding" / "uum.png"
 NAVIGATION_LINKS = (
-    ("pages/9_Computation_Phases.py", "PHASES"),
     ("app.py", "OVERVIEW"),
+    ("pages/9_Computation_Phases.py", "PHASES"),
     ("pages/5_Candidate_Explorer.py", "ALL CANDIDATE EXPLORER"),
     ("pages/1_Selected_Plan_Explorer.py", "SELECTED PLAN EXPLORER"),
     ("pages/6_Selected_G_Explorer.py", "SELECTED G EXPLORER"),
