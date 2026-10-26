@@ -145,13 +145,14 @@ def render_application_sidebar() -> None:
     st.sidebar.divider()
 
 
-def render_page_header(title: str, subtitle: str) -> None:
+def render_page_header(title: str, subtitle: str | None = None) -> None:
     render_application_sidebar()
+    subtitle_html = f'<p style="margin:.45rem 0 0;color:#405060">{subtitle}</p>' if subtitle else ""
     st.markdown(
         f"""
         <div style="padding:1.1rem 1.25rem;border-left:6px solid #C9A227;background:#F3F6F9;margin-bottom:1rem">
           <h1 style="margin:0;color:#17365D">{title}</h1>
-          <p style="margin:.45rem 0 0;color:#405060">{subtitle}</p>
+          {subtitle_html}
         </div>
         """,
         unsafe_allow_html=True,
