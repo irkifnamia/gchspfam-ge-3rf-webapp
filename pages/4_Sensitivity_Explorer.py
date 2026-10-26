@@ -8,7 +8,7 @@ import streamlit as st
 from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS
 from src.runtime import get_repository
-from src.ui import render_data_source_badge, render_footer, render_page_header, sidebar_filters
+from src.ui import apply_global_filters, render_data_source_badge, render_footer, render_page_header
 
 st.set_page_config(page_title="Sensitivity Explorer", page_icon="🧭", layout="wide")
 render_page_header(
@@ -17,8 +17,7 @@ render_page_header(
 )
 repository = get_repository()
 render_data_source_badge(repository)
-filters = sidebar_filters(repository.filter_options())
-data = repository.selected_plans(filters)
+data = apply_global_filters(repository.selected_plans())
 
 if data.empty:
     st.warning("No records satisfy the current filters.")
@@ -78,6 +77,10 @@ st.plotly_chart(
 )
 
 st.dataframe(summary, width="stretch", hide_index=True)
+st.caption(
+    f"The **value** column is the {statistic.lower()} of **{metric_label}** for each "
+    f"{dimension_label} and framework combination remaining after the active global filters are applied."
+)
 if metric.startswith("framework_"):
     st.warning(
         "The displayed own-risk series use framework-specific conditioning. Compare their behavior descriptively; "

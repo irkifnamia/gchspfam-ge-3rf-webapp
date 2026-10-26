@@ -8,8 +8,6 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from src.constants import FRAMEWORKS
-
 ROOT = Path(__file__).resolve().parents[1]
 UUM_LOGO = ROOT / "assets" / "branding" / "uum.png"
 NAVIGATION_LINKS = (
@@ -25,6 +23,68 @@ NAVIGATION_LINKS = (
     ("pages/6_Chart_Gallery.py", "CHART GALLERY"),
     ("pages/7_Validation_and_Downloads.py", "DOWNLOADS"),
 )
+GLOBAL_FILTER_OPTIONS = {
+    "prior_id": [f"B{index}" for index in range(1, 10)],
+    "acceptable_mean_life_ratio": [2, 4, 6, 8, 10, 12],
+    "termination_multiplier": [0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00],
+    "ge_shape": [1, 2, 3],
+    "group_size_r": [2, 3, 4, 5],
+    "chain_parameter_i": [1, 2, 3, 4],
+}
+GLOBAL_FILTER_LABELS = {
+    "prior_id": "Beta prior",
+    "acceptable_mean_life_ratio": "Mean-life ratio ρ / ρA",
+    "termination_multiplier": "Termination multiplier a",
+    "ge_shape": "GE shape λ",
+    "group_size_r": "Group size r",
+    "chain_parameter_i": "Chain parameter i",
+}
+
+
+def _global_filter_key(column: str) -> str:
+    return f"global_filter_{column}"
+
+
+def _clear_global_filters() -> None:
+    for column in GLOBAL_FILTER_OPTIONS:
+        st.session_state[_global_filter_key(column)] = []
+
+
+def active_global_filters() -> dict[str, list[Any]]:
+    """Return nonempty global sidebar selections from session state."""
+    return {
+        column: list(st.session_state.get(_global_filter_key(column), []))
+        for column in GLOBAL_FILTER_OPTIONS
+        if st.session_state.get(_global_filter_key(column), [])
+    }
+
+
+def apply_global_filters(
+    frame: pd.DataFrame,
+    *,
+    mean_ratio_column: str | None = None,
+) -> pd.DataFrame:
+    """Apply the shared sidebar filters to any compatible research table."""
+    result = frame
+    for column, values in active_global_filters().items():
+        target = mean_ratio_column if column == "acceptable_mean_life_ratio" and mean_ratio_column else column
+        if target in result.columns:
+            result = result[result[target].isin(values)]
+    return result.copy()
+
+
+def render_global_filters() -> None:
+    """Render persistent design filters shared by every application page."""
+    with st.sidebar.expander("GLOBAL FILTERS", expanded=False):
+        st.caption("Leave a field empty to include all values.")
+        for column, options in GLOBAL_FILTER_OPTIONS.items():
+            st.multiselect(
+                GLOBAL_FILTER_LABELS[column],
+                options,
+                key=_global_filter_key(column),
+                placeholder="All",
+            )
+        st.button("Clear global filters", on_click=_clear_global_filters, use_container_width=True)
 
 
 def render_application_sidebar() -> None:
@@ -38,11 +98,16 @@ def render_application_sidebar() -> None:
             letter-spacing: 0.01em;
           }
           .gchsp-sidebar-title {
-            color: #17365D;
+            background: linear-gradient(135deg, #0B2D5B 0%, #17365D 72%, #244C7A 100%);
+            border: 2px solid #C9A227;
+            border-radius: 0.45rem;
+            box-shadow: 0 2px 6px rgba(23, 54, 93, 0.2);
+            color: #F4CF57;
             font-size: 1.28rem;
             font-weight: 800;
             letter-spacing: 0.04em;
-            margin: 0.15rem 0 0.55rem;
+            margin: 0.25rem 0 0.65rem;
+            padding: 0.48rem 0.4rem;
             text-align: center;
           }
         </style>
@@ -58,6 +123,8 @@ def render_application_sidebar() -> None:
             # Direct AppTest execution has no multipage registry. Production
             # Streamlit runs always use the page links above.
             st.sidebar.markdown(f"**{label}**")
+    st.sidebar.divider()
+    render_global_filters()
     st.sidebar.divider()
     st.sidebar.markdown(
         """
@@ -93,38 +160,6 @@ def render_page_header(title: str, subtitle: str) -> None:
 
 def render_data_source_badge(_repository: Any) -> None:
     """Retained as a compatibility no-op; page-level source badges are hidden."""
-
-
-def sidebar_filters(options: dict[str, list[Any]], include_framework: bool = True) -> dict[str, list[Any]]:
-    st.sidebar.header("Research filters")
-    labels = {
-        "prior_id": "Beta prior",
-        "acceptable_mean_life_ratio": "Mean-life ratio ρA",
-        "termination_multiplier": "Termination multiplier a",
-        "ge_shape": "GE shape λ",
-        "group_size_r": "Group size r",
-        "chain_parameter_i": "Chain parameter i",
-        "framework": "Framework",
-    }
-    order = [
-        "prior_id",
-        "acceptable_mean_life_ratio",
-        "termination_multiplier",
-        "ge_shape",
-        "group_size_r",
-        "chain_parameter_i",
-    ]
-    if include_framework:
-        order.append("framework")
-    result: dict[str, list[Any]] = {}
-    for column in order:
-        values = options.get(column, [])
-        if column == "framework":
-            values = [value for value in FRAMEWORKS if value in values]
-        chosen = st.sidebar.multiselect(labels[column], values, default=values)
-        if chosen and len(chosen) != len(values):
-            result[column] = chosen
-    return result
 
 
 def dataframe_download(data: pd.DataFrame, filename: str, label: str = "Download filtered CSV") -> None:

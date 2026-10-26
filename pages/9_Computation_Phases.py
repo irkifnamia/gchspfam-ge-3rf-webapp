@@ -68,7 +68,7 @@ render_page_header(
     "A reproducible Phase 3–9 flow from the GChSP operating characteristic to framework comparison.",
 )
 st.markdown(
-    """
+    r"""
     <style>
       .phase-card {
         display: flex;
@@ -100,10 +100,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.info(
-    "The validated research specification is authoritative: this flow uses the corrected GE shape–scale model and "
-    "the normalized Average-risk definitions. Producer risks and risk sums are evaluation measures only."
-)
 expand_all = st.toggle("Expand all mathematical details", value=False)
 
 for position, (number, title, summary, color) in enumerate(PHASES):
@@ -112,6 +108,21 @@ for position, (number, title, summary, color) in enumerate(PHASES):
         st.markdown('<div class="phase-arrow">↓</div>', unsafe_allow_html=True)
 
 st.divider()
+st.subheader("How the result datasets were computed")
+st.markdown(
+    r"""
+| Phase | Input used by the computation | Calculation performed | Result passed forward |
+|---|---|---|---|
+| **3 — OC formulation** | Candidate plan parameters $(g,r,i)$ and failure probability $p$ | Define the probability that the current lot is accepted under the group-chain rule | One OC expression used by every risk framework |
+| **4 — $P_0$ and $P_1$** | Binomial failure counts for $n=gr$ items | Derive the zero-failure and one-failure contributions and evaluate them for $g=1,\ldots,500$ | Candidate-level $L_g(p)$ values |
+| **5 — Fraction defective** | GE shape $\lambda$, termination multiplier $a$, and mean-life ratio $\rho$ | Convert lifetime assumptions into $p_1$ and $p_2$ using the corrected GE mean–scale relationship | Quality-point failure probabilities for 576 design scenarios |
+| **6 — Inputs and priors** | Nine prior mean/SD pairs and 576 scenarios | Convert prior moments to Beta shapes and pair each prior with every scenario | 5,184 prior–scenario analysis units |
+| **7 — Risk computation** | $L_g(p)$, $p_1$, $p_2$, and the Beta prior | Compute PR, CR, APR, ACR, BPR, BCR and the three descriptive sums for every candidate $g$ | 2,592,000 complete candidate records |
+| **8 — Selection of $g^*$** | Framework-specific consumer risk for $g=1,\ldots,500$ | Select the first integer satisfying the 0.10 consumer-risk ceiling separately for each framework | 15,552 selected-plan records |
+| **9 — Evaluation and comparison** | The selected plans and their common risk measures | Build matched results, fixed-plan OC evaluations, sensitivity summaries, and comparisons | Research-ready datasets, tables, and figures |
+"""
+)
+st.caption("Open each phase below for the formula, computational action, and resulting data product.")
 
 with st.expander("Phase 3 — OC function formulation", expanded=expand_all):
     st.markdown(
@@ -121,6 +132,13 @@ with st.expander("Phase 3 — OC function formulation", expanded=expand_all):
     )
     st.latex(r"L_g(p)=P_0(p)+P_1(p)\,[P_0(p)]^i")
     st.markdown("Here $p$ is the probability that an individual item fails before the termination time.")
+    st.markdown("**How this generated the results**")
+    st.markdown(
+        "The experiment created candidate plans for every integer $g$ from 1 to 500 and each configured $(r,i)$ "
+        "pair. This same acceptance mechanism was used for Classical, Average, and Bayesian calculations; the "
+        "frameworks differ in how they evaluate risk, not in the sampling rule or OC function."
+    )
+    st.markdown("**Output of this phase:** a common mathematical template for calculating acceptance probability.")
 
 with st.expander("Phase 4 — Derivation of P₀, P₁, and the complete OC function", expanded=expand_all):
     st.markdown("With $n=gr$ tested items and $d$ failures, the binomial probability is")
@@ -137,6 +155,14 @@ with st.expander("Phase 4 — Derivation of P₀, P₁, and the complete OC func
     st.markdown(
         r"The implementation verifies $L_g(0)=1$, $L_g(1)=0$, $0\le L_g(p)\le1$, and monotonic decrease in $p$."
     )
+    st.markdown("**How this generated the results**")
+    st.markdown(
+        r"For each prior–scenario unit, the program formed arrays containing $g=1,\ldots,500$, calculated "
+        r"$n=gr$, and evaluated both OC terms with vectorized NumPy power operations. The resulting $L_g(p_1)$ "
+        r"and $L_g(p_2)$ values became the Classical acceptance probabilities and the building blocks for the "
+        r"Beta-weighted integrals."
+    )
+    st.markdown("**Output of this phase:** candidate $g$, candidate $n$, $L(p_1)$, and $L(p_2)$ values.")
 
 with st.expander("Phase 5 — Corrected GE fraction-defective formulation", expanded=expand_all):
     st.markdown(r"The research implementation uses GE shape $\lambda>0$ and scale $\sigma>0$:")
@@ -148,6 +174,15 @@ with st.expander("Phase 5 — Corrected GE fraction-defective formulation", expa
     st.markdown(
         r"Numerical evaluation uses stable exponential functions such as `expm1`; the ordinary exponential model is not substituted when $\lambda\ne1$."
     )
+    st.markdown("**How this generated the results**")
+    st.markdown(
+        r"The program calculated $H_\lambda$ from the digamma function for each GE shape. It then evaluated "
+        r"$p_1$ at the acceptable design ratio $\rho_A$ and $p_2$ at $\rho=1$ for every combination of "
+        r"$\rho_A$, $a$, $\lambda$, $r$, and $i$. Every scenario was checked to satisfy $0<p_1<p_2<1$. "
+        r"Because $p_2$ does not contain $\rho_A$, consumer-risk-selected $g^*$ is theoretically invariant to "
+        r"the acceptable design ratio when the other parameters are fixed."
+    )
+    st.markdown("**Output of this phase:** one corrected $(p_1,p_2)$ pair for each of the 576 design scenarios.")
 
 with st.expander("Phase 6 — Classical quality inputs and nine Beta priors", expanded=expand_all):
     st.markdown(
@@ -162,6 +197,16 @@ with st.expander("Phase 6 — Classical quality inputs and nine Beta priors", ex
     st.markdown(
         r"The prior means are $\{0.032,0.063,0.094\}$ and prior standard deviations are "
         r"$\{0.047,0.054,0.062\}$, producing priors B1–B9. All resulting shape parameters must be strictly positive."
+    )
+    st.markdown("**How this generated the results**")
+    st.markdown(
+        r"Each of the nine mean/SD pairs was converted once to $(\alpha_\pi,\beta_\pi)$ and its moments were "
+        r"checked numerically. The nine fixed priors were crossed with the 576 design scenarios, producing "
+        r"$576\times9=5{,}184$ prior–scenario units. Within a unit, the same prior was used for Average and "
+        r"Bayesian risks. Classical risks were repeated for reporting but were verified to be prior-independent."
+    )
+    st.markdown(
+        "**Output of this phase:** Beta parameters, prior good-region probability, and prior bad-region probability for each analysis unit."
     )
 
 with st.expander("Phase 7 — Six risks and three evaluation sums", expanded=expand_all):
@@ -182,6 +227,19 @@ with st.expander("Phase 7 — Six risks and three evaluation sums", expanded=exp
         r"I_x(\alpha_\pi+u,\beta_\pi+v)."
     )
     st.markdown("Upper tails use complementary incomplete-Beta evaluation directly to avoid cancellation.")
+    st.markdown("**How this generated the results**")
+    st.markdown(
+        "For every analysis unit and all 500 candidate values of $g$, the program first calculated PR and CR "
+        "directly from $L_g(p_1)$ and $L_g(p_2)$. It evaluated the Average and Bayesian numerators and "
+        "denominators through log-Beta and regularized incomplete-Beta identities, using complementary upper-tail "
+        "functions where subtraction from one would lose precision. APR and ACR were normalized by prior-region "
+        "probabilities; BPR and BCR were normalized by the total rejection or acceptance probability."
+    )
+    st.markdown(
+        r"The three sums were then formed row by row: $MSR=PR+CR$, $MSAR=APR+ACR$, and $MSBR=BPR+BCR$. "
+        r"This calculation produced $5{,}184\times500=2{,}592{,}000$ candidate records containing all six risks."
+    )
+    st.markdown("**Output of this phase:** the complete candidate-level research dataset.")
 
 with st.expander("Phase 8 — Consumer-risk-only selection of the smallest feasible g*", expanded=expand_all):
     st.latex(r"g_C^*=\min\{g\in\{1,\ldots,500\}:CR(g)\le\beta_0\}")
@@ -191,6 +249,18 @@ with st.expander("Phase 8 — Consumer-risk-only selection of the smallest feasi
     st.markdown(
         "Each framework is optimized separately. The selected integer must satisfy its own consumer-risk ceiling, "
         "and every smaller integer must fail it. No producer-risk constraint and no risk-sum objective is introduced."
+    )
+    st.markdown("**How this generated the results**")
+    st.markdown(
+        "Within each prior–scenario unit, the candidate rows were kept in ascending integer order. Three Boolean "
+        "feasibility columns recorded whether CR, ACR, or BCR was at most 0.10. The first `True` row in each "
+        "column supplied the framework's $g^*$; $n^*=rg^*$ was then calculated. The selected row and the preceding "
+        "row were checked to confirm feasibility and integer minimality. Infeasible units would have been retained "
+        "with missing selected-plan values rather than being assigned $g=500$."
+    )
+    st.markdown(
+        "**Output of this phase:** three framework-selected plans for every analysis unit, giving "
+        r"$5{,}184\times3=15{,}552$ selected-plan records."
     )
 
 with st.expander("Phase 9 — Sampling, OC, sensitivity, and matched comparison outputs", expanded=expand_all):
@@ -206,5 +276,16 @@ with st.expander("Phase 9 — Sampling, OC, sensitivity, and matched comparison 
         r"plan at each design ratio. Matched analysis compares Classical, Average, and Bayesian records on the same "
         r"prior–scenario key and clearly separates common-risk from own-risk summaries."
     )
+    st.markdown("**How this generated the results**")
+    st.markdown(
+        r"Every framework-selected $g^*$ was joined back to the common candidate measures so that PR, APR, BPR, "
+        r"CR, ACR, BCR, MSR, MSAR, and MSBR were all evaluated at the same selected plan. The three framework "
+        r"records were pivoted into 5,184 matched prior–scenario rows. After confirming design-ratio invariance, "
+        r"the selected records were reduced to 2,592 unique fixed plans. Each plan was held constant while the "
+        r"corrected GE mapping was reevaluated at $\rho\in\{2,4,6,8,10,12\}$, producing "
+        r"$2{,}592\times6=15{,}552$ OC evaluation rows. These outputs then supplied feasibility summaries, sensitivity tables, "
+        r"head-to-head comparisons, downloadable datasets, and the academic figures shown in the application."
+    )
+    st.markdown("**Output of this phase:** the research-ready analytical tables and visual reporting products.")
 
 render_footer()

@@ -9,7 +9,7 @@ import streamlit as st
 from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS, FRAMEWORKS
 from src.runtime import get_repository
-from src.ui import dataframe_download, render_page_header
+from src.ui import apply_global_filters, dataframe_download, render_page_header
 
 st.set_page_config(page_title="Selected Plan Explorer", page_icon="🔎", layout="wide")
 render_page_header(
@@ -18,8 +18,11 @@ render_page_header(
 )
 
 repository = get_repository()
-selected = repository.selected_plans()
-fixed_oc = repository.fixed_plan_oc()
+selected = apply_global_filters(repository.selected_plans())
+fixed_oc = apply_global_filters(repository.fixed_plan_oc(), mean_ratio_column="evaluation_mean_life_ratio")
+if selected.empty:
+    st.warning("No selected plans match the active global filters.")
+    st.stop()
 
 st.subheader("Choose one sampling plan")
 with st.form("industry_plan_selector"):
@@ -54,6 +57,12 @@ selection = st.session_state["industry_plan_selection"]
 plan_rows = selected.copy()
 for column, value in selection.items():
     plan_rows = plan_rows[plan_rows[column] == value]
+if len(plan_rows) != 1:
+    st.session_state["industry_plan_selection"] = form_selection
+    selection = form_selection
+    plan_rows = selected.copy()
+    for column, value in selection.items():
+        plan_rows = plan_rows[plan_rows[column] == value]
 if len(plan_rows) != 1:
     st.error(f"Expected one selected plan for this specification; found {len(plan_rows):,}.")
     st.stop()

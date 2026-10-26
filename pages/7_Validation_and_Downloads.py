@@ -9,7 +9,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import streamlit as st
 
 from src.runtime import get_repository
-from src.ui import dataframe_download, render_page_header
+from src.ui import apply_global_filters, dataframe_download, render_page_header
 
 
 @st.cache_data(show_spinner=False)
@@ -30,9 +30,9 @@ render_page_header(
 )
 
 repository = get_repository()
-selected = repository.selected_plans()
-matched = repository.matched_results()
-fixed_oc = repository.fixed_plan_oc()
+selected = apply_global_filters(repository.selected_plans())
+matched = apply_global_filters(repository.matched_results())
+fixed_oc = apply_global_filters(repository.fixed_plan_oc(), mean_ratio_column="evaluation_mean_life_ratio")
 
 st.subheader("Research-ready analytical datasets")
 cards = st.columns(3)
@@ -57,7 +57,10 @@ st.subheader("Candidate-level extract")
 st.write(
     "Choose one prior–scenario unit to download all 500 candidate group counts and all candidate-level risk measures."
 )
-index = repository.scenario_prior_index()
+index = apply_global_filters(repository.scenario_prior_index())
+if index.empty:
+    st.info("No candidate units match the active global filters.")
+    st.stop()
 with st.form("download_candidate_selector"):
     controls = st.columns(2)
     prior_id = controls[0].selectbox("Beta prior", sorted(index["prior_id"].unique()))

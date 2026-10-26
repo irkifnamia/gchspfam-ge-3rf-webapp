@@ -10,7 +10,13 @@ from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS, FRAMEWORKS
 from src.metrics import WINNER_CATEGORY_ORDER, framework_win_percentages
 from src.runtime import get_repository
-from src.ui import dataframe_download, render_data_source_badge, render_footer, render_page_header
+from src.ui import (
+    apply_global_filters,
+    dataframe_download,
+    render_data_source_badge,
+    render_footer,
+    render_page_header,
+)
 
 WINNER_COLORS = {
     "Bayesian win": "#C9A227",
@@ -21,14 +27,6 @@ WINNER_COLORS = {
     "Average & Classical tie": "#76A5AF",
     "Three-way tie": "#B7B7B7",
 }
-
-
-def filter_values(frame: pd.DataFrame, selections: dict[str, list[object]]) -> pd.DataFrame:
-    """Apply inclusive multi-value filters without changing the source frame."""
-    result = frame
-    for column, values in selections.items():
-        result = result[result[column].isin(values)]
-    return result.copy()
 
 
 def complete_feasible_keys(frame: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
@@ -67,53 +65,10 @@ render_page_header(
 )
 repository = get_repository()
 render_data_source_badge(repository)
-
-version = st.radio(
-    "Comparison version",
-    ["Matched feasible", "All available (not feasibility-matched)"],
-    horizontal=True,
-    help=(
-        "Matched feasible retains only prior–scenario units with feasible results for all three frameworks. "
-        "The all-available version retains every framework record; winner shares still require a complete trio."
-    ),
-)
-matched_version = version == "Matched feasible"
-
-selected = repository.selected_plans()
-oc = repository.fixed_plan_oc()
-with st.expander("Comparison filters", expanded=False):
-    filter_columns = st.columns(5)
-    priors = filter_columns[0].multiselect(
-        "Beta priors", sorted(selected["prior_id"].unique()), default=sorted(selected["prior_id"].unique())
-    )
-    shapes = filter_columns[1].multiselect(
-        "GE shapes λ", sorted(selected["ge_shape"].unique()), default=sorted(selected["ge_shape"].unique())
-    )
-    terminations = filter_columns[2].multiselect(
-        "Termination a",
-        sorted(selected["termination_multiplier"].unique()),
-        default=sorted(selected["termination_multiplier"].unique()),
-    )
-    group_sizes = filter_columns[3].multiselect(
-        "Group size r", sorted(selected["group_size_r"].unique()), default=sorted(selected["group_size_r"].unique())
-    )
-    chains = filter_columns[4].multiselect(
-        "Chain i",
-        sorted(selected["chain_parameter_i"].unique()),
-        default=sorted(selected["chain_parameter_i"].unique()),
-    )
-
-selections = {
-    "prior_id": priors,
-    "ge_shape": shapes,
-    "termination_multiplier": terminations,
-    "group_size_r": group_sizes,
-    "chain_parameter_i": chains,
-}
-selected = filter_values(selected, selections)
-oc = filter_values(oc, selections)
+selected = apply_global_filters(repository.selected_plans())
+oc = apply_global_filters(repository.fixed_plan_oc(), mean_ratio_column="evaluation_mean_life_ratio")
 if selected.empty or oc.empty:
-    st.warning("The current filters leave no records to compare.")
+    st.warning("The active global filters leave no complete records to compare.")
     st.stop()
 
 st.caption(
@@ -123,11 +78,8 @@ st.caption(
 
 st.subheader("1. Selected g* comparison across scenarios")
 g_keys = ["scenario_id", "prior_id"]
-if matched_version:
-    eligible_g = complete_feasible_keys(selected, g_keys)
-    selected_comparison = selected.merge(eligible_g, on=g_keys, how="inner")
-else:
-    selected_comparison = selected
+eligible_g = complete_feasible_keys(selected, g_keys)
+selected_comparison = selected.merge(eligible_g, on=g_keys, how="inner")
 
 g_pivot = selected_comparison.pivot_table(
     index=g_keys,
@@ -158,32 +110,39 @@ g_frequency = (
     .reset_index(name="count")
 )
 g_frequency["percentage"] = 100.0 * g_frequency["count"] / g_frequency.groupby("framework")["count"].transform("sum")
-left, right = st.columns([1.15, 1])
-with left:
-    figure = px.bar(
-        g_frequency,
-        x="selected_g",
-        y="percentage",
-        color="framework",
-        barmode="group",
-        color_discrete_map=FRAMEWORK_COLORS,
-        category_orders={"framework": list(FRAMEWORKS)},
-        labels={"selected_g": "Selected g*", "percentage": "Within-framework percentage", "framework": "Framework"},
-    )
-    st.plotly_chart(apply_academic_layout(figure, "Distribution of selected g*"), width="stretch")
-with right:
-    winner_bar(g_winners, "Selected g* head-to-head outcomes")
-
-summary_tab, outcome_tab = st.tabs(["Framework summary", "Win and tie percentages"])
+summary_tab, outcome_tab, distribution_tab = st.tabs(
+    ["Framework summary", "Win and tie percentages", "Distribution of selected g*"]
+)
 with summary_tab:
     st.dataframe(g_summary, width="stretch", hide_index=True)
 with outcome_tab:
+    winner_bar(g_winners, "Selected g* head-to-head outcomes")
     st.dataframe(
         g_winners,
         width="stretch",
         hide_index=True,
         column_config={"percentage": st.column_config.NumberColumn(format="%.6f%%")},
     )
+with distribution_tab:
+    distribution_matrix = (
+        g_frequency.pivot(
+            index="framework",
+            columns="selected_g",
+            values="percentage",
+        )
+        .reindex(FRAMEWORKS)
+        .fillna(0.0)
+    )
+    distribution_heatmap = px.imshow(
+        distribution_matrix,
+        text_auto=".1f",
+        aspect="auto",
+        color_continuous_scale="Blues",
+        labels={"x": "Selected g*", "y": "Framework", "color": "Percentage"},
+    )
+    distribution_heatmap.update_layout(margin={"l": 25, "r": 20, "t": 35, "b": 35})
+    st.plotly_chart(distribution_heatmap, width="stretch")
+    st.caption("Each cell is the within-framework percentage of globally filtered scenarios selecting that g*.")
 
 st.subheader("2. L(p) comparison across mean-life ratios")
 lp_keys = [
@@ -194,11 +153,8 @@ lp_keys = [
     "chain_parameter_i",
     "evaluation_mean_life_ratio",
 ]
-if matched_version:
-    eligible_lp = complete_feasible_keys(oc, lp_keys)
-    oc_comparison = oc.merge(eligible_lp, on=lp_keys, how="inner")
-else:
-    oc_comparison = oc
+eligible_lp = complete_feasible_keys(oc, lp_keys)
+oc_comparison = oc.merge(eligible_lp, on=lp_keys, how="inner")
 
 lp_statistic = st.radio("L(p) summary line", ["Mean", "Median"], horizontal=True)
 lp_summary = (
@@ -259,30 +215,17 @@ figure = px.bar(
 figure.update_yaxes(range=[0, 100])
 st.plotly_chart(apply_academic_layout(figure, "L(p) wins and ties by mean-life ratio"), width="stretch")
 
-lp_left, lp_right = st.columns(2)
-with lp_left:
-    st.markdown("#### Overall L(p) outcomes")
-    st.dataframe(
-        lp_winners_overall,
-        width="stretch",
-        hide_index=True,
-        column_config={"percentage": st.column_config.NumberColumn(format="%.6f%%")},
-    )
-with lp_right:
-    st.markdown("#### Comparison coverage")
-    st.metric("Complete L(p) trios", f"{len(lp_complete):,}")
-    st.metric("Incomplete trios excluded", f"{len(lp_pivot) - len(lp_complete):,}")
+st.markdown("#### Overall L(p) outcomes")
+st.dataframe(
+    lp_winners_overall,
+    width="stretch",
+    hide_index=True,
+    column_config={"percentage": st.column_config.NumberColumn(format="%.6f%%")},
+)
 
 with st.expander("Download comparison tables"):
     dataframe_download(g_winners, "head_to_head_selected_g_outcomes.csv", "Download selected-g outcomes")
     dataframe_download(lp_summary, "head_to_head_lp_by_ratio.csv", "Download L(p) ratio summary")
     dataframe_download(lp_ratio_winners, "head_to_head_lp_outcomes_by_ratio.csv", "Download L(p) outcomes")
-
-if version == "All available (not feasibility-matched)" and g_incomplete == 0 and len(lp_pivot) == len(lp_complete):
-    st.info(
-        "All Stage 6 selections are feasible and every comparison key contains all three frameworks. Therefore, the "
-        "current all-available and matched-feasible numerical results coincide; the version control is retained for "
-        "future datasets that may contain infeasible or incomplete records."
-    )
 
 render_footer()

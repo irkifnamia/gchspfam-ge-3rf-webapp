@@ -9,7 +9,7 @@ from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS
 from src.metrics import framework_overview
 from src.runtime import get_repository
-from src.ui import render_data_source_badge, render_footer, render_page_header
+from src.ui import apply_global_filters, render_data_source_badge, render_footer, render_page_header
 
 st.set_page_config(
     page_title="Overview",
@@ -26,14 +26,18 @@ render_page_header(
 repository = get_repository()
 render_data_source_badge(repository)
 
-counts = repository.dataset_counts()
-selected = repository.selected_plans()
+selected = apply_global_filters(repository.selected_plans())
+if selected.empty:
+    st.warning("No research records match the active global filters.")
+    st.stop()
 overview = framework_overview(selected)
+matched_units = selected[["scenario_id", "prior_id"]].drop_duplicates()
+candidate_records = len(matched_units) * 500
 
 metric_columns = st.columns(5)
-metric_columns[0].metric("Candidate records", f"{counts['candidate_records']:,}")
-metric_columns[1].metric("Selected plans", f"{counts['selected_records']:,}")
-metric_columns[2].metric("Matched units", f"{counts['matched_records']:,}")
+metric_columns[0].metric("Candidate records", f"{candidate_records:,}")
+metric_columns[1].metric("Selected plans", f"{len(selected):,}")
+metric_columns[2].metric("Matched units", f"{len(matched_units):,}")
 metric_columns[3].metric("Frameworks", "3")
 metric_columns[4].metric("Consumer-risk ceiling", "0.10")
 

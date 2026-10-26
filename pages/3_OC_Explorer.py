@@ -8,7 +8,7 @@ import streamlit as st
 from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS
 from src.runtime import get_repository
-from src.ui import render_data_source_badge, render_footer, render_page_header
+from src.ui import apply_global_filters, render_data_source_badge, render_footer, render_page_header
 
 st.set_page_config(page_title="OC Explorer", page_icon="📈", layout="wide")
 render_page_header(
@@ -17,7 +17,10 @@ render_page_header(
 )
 repository = get_repository()
 render_data_source_badge(repository)
-data = repository.fixed_plan_oc()
+data = apply_global_filters(repository.fixed_plan_oc(), mean_ratio_column="evaluation_mean_life_ratio")
+if data.empty:
+    st.warning("No OC records match the active global filters.")
+    st.stop()
 
 selectors = st.columns(5)
 prior = selectors[0].selectbox("Beta prior", sorted(data.prior_id.unique()))
@@ -53,9 +56,7 @@ st.plotly_chart(
     apply_academic_layout(figure, "Fixed-plan acceptance probability across mean-life ratios"), width="stretch"
 )
 
-plan_table = subset[
-    ["framework", "selected_g", "selected_n", "consumer_risk_limit", "design_ratio_invariance_verified"]
-].drop_duplicates()
+plan_table = subset[["framework", "selected_g", "selected_n", "consumer_risk_limit"]].drop_duplicates()
 st.dataframe(plan_table, width="stretch", hide_index=True)
 
 st.info(

@@ -9,7 +9,24 @@ import streamlit as st
 from src.constants import FRAMEWORK_COLORS
 from src.metrics import first_feasible_groups
 from src.runtime import get_repository
-from src.ui import dataframe_download, render_data_source_badge, render_footer, render_page_header
+from src.ui import apply_global_filters, dataframe_download, render_data_source_badge, render_footer, render_page_header
+
+
+def gradient_styles(series: pd.Series, light: str, dark: str) -> list[str]:
+    """Return dependency-free gradient CSS for one numerical risk column."""
+    minimum = float(series.min())
+    maximum = float(series.max())
+    span = maximum - minimum
+    light_rgb = tuple(int(light[index : index + 2], 16) for index in (1, 3, 5))
+    dark_rgb = tuple(int(dark[index : index + 2], 16) for index in (1, 3, 5))
+    styles = []
+    for value in series.astype(float):
+        weight = 0.0 if span == 0 else (value - minimum) / span
+        rgb = tuple(round(start + weight * (end - start)) for start, end in zip(light_rgb, dark_rgb, strict=True))
+        foreground = "#FFFFFF" if weight >= 0.58 else "#17202A"
+        styles.append(f"background-color: rgb{rgb}; color: {foreground}")
+    return styles
+
 
 st.set_page_config(page_title="Selected g Explorer", page_icon="🔢", layout="wide")
 render_page_header(
@@ -20,7 +37,10 @@ repository = get_repository()
 render_data_source_badge(repository)
 
 st.subheader("Candidate g selection for one prior–scenario unit")
-index = repository.scenario_prior_index()
+index = apply_global_filters(repository.scenario_prior_index())
+if index.empty:
+    st.warning("No prior–scenario units match the active global filters.")
+    st.stop()
 st.caption(
     "Candidate rows are queried from Neon only after you click Load. "
     "The first request after inactivity may take several seconds; recent traces are cached."
@@ -135,8 +155,13 @@ candidate_range = st.slider(
     key="selected_g_range",
 )
 candidate_view = candidate_table[candidate_table["g"].between(*candidate_range)]
+styled_candidate_view = (
+    candidate_view.style.apply(lambda series: gradient_styles(series, "#EAF2FB", "#17365D"), subset=["CR"])
+    .apply(lambda series: gradient_styles(series, "#EAF6EF", "#2E7D5B"), subset=["ACR"])
+    .apply(lambda series: gradient_styles(series, "#FFF7D6", "#C69200"), subset=["BCR"])
+)
 st.dataframe(
-    candidate_view,
+    styled_candidate_view,
     width="stretch",
     height=600,
     hide_index=True,
@@ -146,6 +171,7 @@ st.dataframe(
         "BCR": st.column_config.NumberColumn(format="%.10f"),
     },
 )
+st.caption("Risk gradients: CR uses blue, ACR uses green, and BCR uses gold; darker cells indicate larger values.")
 st.caption(
     "CR, ACR, and BCR retain their distinct conditioning definitions. Each selected g* is the first row where its own consumer risk is at most 0.10."
 )
@@ -160,7 +186,7 @@ st.subheader("Matched-scenario selected g* heatmaps")
 st.write(
     "Choose a prior, GE shape, and GChSP design. The three heatmaps use the same scale, so cell colors are directly comparable across frameworks."
 )
-matched = repository.matched_results()
+matched = apply_global_filters(repository.matched_results())
 designs = (
     matched[["group_size_r", "chain_parameter_i"]].drop_duplicates().sort_values(["group_size_r", "chain_parameter_i"])
 )
