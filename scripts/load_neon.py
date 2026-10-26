@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import sys
+import tomllib
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -70,8 +71,12 @@ CANDIDATE_FACT_COLUMNS = [
 
 def database_url() -> str:
     value = os.getenv("NEON_DATABASE_URL")
+    local_secret = ROOT / ".streamlit" / "admin_secrets.toml"
+    if not value and local_secret.is_file():
+        payload = tomllib.loads(local_secret.read_text(encoding="utf-8"))
+        value = payload.get("database", {}).get("url")
     if not value:
-        raise RuntimeError("Set NEON_DATABASE_URL to the administrative Neon connection string.")
+        raise RuntimeError("Set NEON_DATABASE_URL or create the Git-ignored .streamlit/admin_secrets.toml file.")
     return value.replace("postgresql+psycopg://", "postgresql://", 1)
 
 

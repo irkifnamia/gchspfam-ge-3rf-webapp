@@ -36,7 +36,7 @@ Copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and add the 
 url = "postgresql+psycopg://..."
 ```
 
-The administrative connection used by the importer is supplied separately through `NEON_DATABASE_URL`. The public app must use `NEON_READONLY_DATABASE_URL` or the read-only value in Streamlit secrets.
+The administrative connection used by the importer is supplied separately through `NEON_DATABASE_URL` or the Git-ignored `.streamlit/admin_secrets.toml` file. The public app must use `NEON_READONLY_DATABASE_URL` or the read-only value in Streamlit secrets.
 
 ## Database preparation
 

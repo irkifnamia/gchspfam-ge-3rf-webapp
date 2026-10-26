@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import json
 import os
+import tomllib
+from pathlib import Path
 
 import psycopg
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def database_url() -> str:
     value = os.getenv("NEON_DATABASE_URL")
+    local_secret = ROOT / ".streamlit" / "admin_secrets.toml"
+    if not value and local_secret.is_file():
+        payload = tomllib.loads(local_secret.read_text(encoding="utf-8"))
+        value = payload.get("database", {}).get("url")
     if not value:
-        raise RuntimeError("Set NEON_DATABASE_URL before validation.")
+        raise RuntimeError("Set NEON_DATABASE_URL or create the Git-ignored .streamlit/admin_secrets.toml file.")
     return value.replace("postgresql+psycopg://", "postgresql://", 1)
 
 

@@ -16,8 +16,9 @@ With no database secret configured, the app reads the validated sibling
 ## 2. Neon administrative import
 
 Use the direct (non-pooled) Neon connection string for this one-time bulk
-load. Set it only in the current terminal; do not paste it into source files,
-GitHub, or chat.
+load. Do not paste it into tracked source files, GitHub, or chat. Either set it
+only in the current terminal, or copy `.streamlit/admin_secrets.toml.example`
+to `.streamlit/admin_secrets.toml` and edit the ignored local copy in VS Code.
 
 ```powershell
 $env:NEON_DATABASE_URL = "postgresql://ADMIN_USER:ADMIN_PASSWORD@DIRECT_HOST/neondb?sslmode=require"
@@ -25,6 +26,9 @@ $env:NEON_DATABASE_URL = "postgresql://ADMIN_USER:ADMIN_PASSWORD@DIRECT_HOST/neo
 .\.venv\Scripts\python.exe scripts\validate_neon.py
 Remove-Item Env:\NEON_DATABASE_URL
 ```
+
+The local administrator secret file is also accepted by both commands above.
+It is separate from the read-only application secret.
 
 The loader commits every candidate partition separately. A rerun checks the
 stored SHA-256 and row count, then skips each completed partition.
