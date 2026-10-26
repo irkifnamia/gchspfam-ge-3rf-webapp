@@ -97,6 +97,17 @@ def render_application_sidebar() -> None:
             text-transform: uppercase;
             letter-spacing: 0.01em;
           }
+          [data-testid="stSidebar"] [data-testid="stExpander"] details > summary {
+            background: #D9DEE5 !important;
+            border: 1px solid #C1C8D0 !important;
+            border-radius: 0.4rem !important;
+            color: #263442 !important;
+          }
+          [data-testid="stSidebar"] [data-testid="stExpander"] details > summary p {
+            color: #263442 !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.025em;
+          }
           .gchsp-sidebar-title {
             background: linear-gradient(135deg, #0B2D5B 0%, #17365D 72%, #244C7A 100%);
             border: 2px solid #C9A227;

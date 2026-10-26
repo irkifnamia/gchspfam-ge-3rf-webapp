@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
-import pandas as pd
-import plotly.express as px
 import streamlit as st
 
-from src.charts import apply_academic_layout
-from src.constants import FRAMEWORK_COLORS
 from src.runtime import get_repository
 from src.ui import apply_global_filters, dataframe_download, render_data_source_badge, render_footer, render_page_header
+
+RISK_GRADIENTS = {
+    "pr": "Blues",
+    "apr": "Greens",
+    "bpr": "YlOrBr",
+    "cr": "Purples",
+    "acr": "Oranges",
+    "bcr": "Reds",
+}
+
+
+def style_candidate_table(frame):
+    """Apply a distinct within-column gradient to each displayed risk measure."""
+    risk_columns = [column for column in RISK_GRADIENTS if column in frame.columns]
+    styled = frame.style.format({column: "{:.8f}" for column in risk_columns})
+    for column in risk_columns:
+        styled = styled.background_gradient(cmap=RISK_GRADIENTS[column], subset=[column], axis=0)
+    return styled
+
 
 st.set_page_config(page_title="All Candidate Explorer", page_icon="🧪", layout="wide")
 render_page_header(
@@ -99,7 +114,11 @@ view = trace[trace["candidate_g"].between(*g_range)]
 if selected_columns:
     displayed = view[selected_columns]
     st.caption(f"Showing {len(displayed):,} candidate records and {len(selected_columns)} selected columns.")
-    st.dataframe(displayed, width="stretch", height=520, hide_index=True)
+    st.dataframe(style_candidate_table(displayed), width="stretch", height=520, hide_index=True)
+    st.caption(
+        "Risk gradients: PR—blue, APR—green, BPR—gold, CR—purple, ACR—orange, and BCR—red. "
+        "Darker shading indicates a larger value within the currently displayed candidate range."
+    )
     dataframe_download(
         displayed,
         f"candidate_view_{scenario_id}_{loaded_prior}_g{g_range[0]}-{g_range[1]}.csv",
@@ -108,63 +127,6 @@ if selected_columns:
 else:
     st.warning("Select at least one column to display the candidate table.")
 
-st.subheader("Risk trajectories and minimality")
-consumer = trace[["candidate_g", "cr", "acr", "bcr"]].rename(
-    columns={"cr": "Classical", "acr": "Average", "bcr": "Bayesian"}
-)
-consumer_long = consumer.melt(id_vars="candidate_g", var_name="framework", value_name="consumer_risk")
-figure = px.line(
-    consumer_long,
-    x="candidate_g",
-    y="consumer_risk",
-    color="framework",
-    color_discrete_map=FRAMEWORK_COLORS,
-    labels={"candidate_g": "Candidate g", "consumer_risk": "Framework-specific consumer risk"},
-)
-figure.add_hline(y=0.10, line_dash="dash", line_color="#A33A3A", annotation_text="Risk ceiling 0.10")
-st.plotly_chart(apply_academic_layout(figure, "Consumer-risk trajectories"), width="stretch")
-
-mapping = {
-    "Classical": ("cr", "classical_feasible", "pr"),
-    "Average": ("acr", "average_feasible", "apr"),
-    "Bayesian": ("bcr", "bayesian_feasible", "bpr"),
-}
-minimality_rows = []
-for framework, (consumer_column, feasible_column, producer_column) in mapping.items():
-    feasible = trace[trace[feasible_column]]
-    selected = feasible.iloc[0]
-    previous = trace[trace.candidate_g == selected.candidate_g - 1]
-    minimality_rows.append(
-        {
-            "framework": framework,
-            "selected_g": int(selected.candidate_g),
-            "selected_n": int(selected.candidate_n),
-            "own_consumer_risk_at_g*": float(selected[consumer_column]),
-            "own_producer_risk_at_g*": float(selected[producer_column]),
-            "risk_at_g*-1": None if previous.empty else float(previous.iloc[0][consumer_column]),
-            "g*-1_fails": True if previous.empty else bool(previous.iloc[0][consumer_column] > 0.10),
-        }
-    )
-minimality = pd.DataFrame(minimality_rows)
-st.dataframe(minimality, width="stretch", hide_index=True)
-
-producer = trace[["candidate_g", "pr", "apr", "bpr"]].rename(
-    columns={"pr": "Classical", "apr": "Average", "bpr": "Bayesian"}
-)
-producer_long = producer.melt(id_vars="candidate_g", var_name="framework", value_name="producer_risk")
-figure = px.line(
-    producer_long,
-    x="candidate_g",
-    y="producer_risk",
-    color="framework",
-    color_discrete_map=FRAMEWORK_COLORS,
-    labels={"candidate_g": "Candidate g", "producer_risk": "Framework-specific producer risk"},
-)
-st.plotly_chart(apply_academic_layout(figure, "Producer-risk evaluation (not constrained)"), width="stretch")
-
-st.info(
-    "The red line is the only optimization restriction. Producer risks and risk sums are shown for evaluation and do not affect g*."
-)
 dataframe_download(
     trace, f"candidate_trace_{scenario_id}_{loaded_prior}.csv", "Download full 31-column candidate trace"
 )
