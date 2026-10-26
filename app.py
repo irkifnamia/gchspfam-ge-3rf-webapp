@@ -70,9 +70,12 @@ st.markdown(
     """
 - **Selected Plan Explorer** inspects all six risks at each framework-selected plan.
 - **Framework Comparison** performs matched comparisons without treating differently conditioned own risks as equivalent.
+- **Head-to-Head Comparison** reports three-framework g* and L(p) wins and ties for matched or all-available records.
 - **OC Explorer** examines fixed-plan acceptance across mean-life ratios.
 - **Sensitivity Explorer** studies GE shape, termination multiplier, mean-life ratio, GChSP parameters, and Beta prior.
-- **Candidate Explorer** traces all 500 group-count candidates and verifies first-feasible selection.
+- **All Candidate Explorer** displays any chosen subset of the 31 candidate columns across all 500 group counts.
+- **Selected g Explorer** traces CR, ACR, and BCR selection and compares framework-selected g* using matched-scenario heatmaps.
+- **Computation Phases** documents the validated Phase 3–9 mathematical workflow with collapsible details.
 - **Chart Gallery** provides the complete set of 39 validated Stage 9 academic figures.
 - **Validation & Downloads** exposes reproducibility evidence and research-ready extracts.
 """

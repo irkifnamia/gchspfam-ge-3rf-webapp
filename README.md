@@ -9,12 +9,19 @@ The application does **not** select new plans or alter the research methodology.
 - **Codex**: development, testing, migrations, and review.
 - **GitHub**: public source repository and continuous integration.
 - **Streamlit**: interactive web application and public deployment.
-- **Neon PostgreSQL**: production query layer for all 2,592,000 candidate records and the research-ready analytical datasets.
+- **Neon PostgreSQL**: read-only, on-demand access to all 2,592,000 candidate records.
+- **Packaged Parquet snapshots**: compact validated selected-plan, matched-framework, and fixed-plan OC tables for fast page loads.
 
 The app supports two data backends:
 
 1. `local`: reads the validated sibling results project without modifying it.
-2. `neon`: queries the production PostgreSQL schema with a read-only connection.
+2. `neon`: serves the compact immutable analytics from hashed packaged snapshots
+   and queries the complete candidate data from PostgreSQL with a read-only
+   connection. If snapshots are absent, the analytical tables fall back to
+   Neon automatically.
+
+Recent 500-row candidate traces are held in a bounded in-process cache. The
+application never loads the complete candidate dataset into memory.
 
 ## Local setup
 

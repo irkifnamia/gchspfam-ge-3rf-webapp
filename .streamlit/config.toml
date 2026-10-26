@@ -12,3 +12,6 @@ gatherUsageStats = false
 headless = true
 maxUploadSize = 50
 
+[client]
+showSidebarNavigation = false
+

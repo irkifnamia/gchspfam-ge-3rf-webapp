@@ -117,6 +117,6 @@ with right:
     dataframe_download(matched, "matched_framework_results.csv", "Download matched framework results")
 
 st.info(
-    "The complete 2,592,000-row candidate dataset is intentionally downloaded through filtered Candidate Explorer extracts or the authoritative Parquet archive, not materialized in browser memory."
+    "The complete 2,592,000-row candidate dataset is intentionally downloaded through filtered All Candidate Explorer extracts or the authoritative Parquet archive, not materialized in browser memory."
 )
 render_footer()

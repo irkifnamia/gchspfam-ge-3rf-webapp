@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from collections.abc import Iterable
 from functools import cached_property
 from pathlib import Path
+from threading import RLock
 from typing import Any
 
 import pandas as pd
@@ -174,6 +176,8 @@ class NeonResultsRepository(ResearchRepository):
             pool_recycle=240,
             connect_args={"connect_timeout": 15},
         )
+        self._candidate_cache: OrderedDict[tuple[str, str], pd.DataFrame] = OrderedDict()
+        self._candidate_cache_lock = RLock()
 
     @staticmethod
     def _where(filters: dict[str, Iterable[Any]] | None, allowed: set[str]) -> tuple[str, dict[str, Any]]:
@@ -197,37 +201,99 @@ class NeonResultsRepository(ResearchRepository):
         with self.engine.connect() as connection:
             return pd.read_sql_query(text(sql), connection, params=parameters or {})
 
-    def selected_plans(self, filters: dict[str, Iterable[Any]] | None = None) -> pd.DataFrame:
-        where, parameters = self._where(filters, set(FILTER_COLUMNS))
-        return self._query(
-            "SELECT * FROM research.selected_plans" + where + " ORDER BY scenario_id, prior_id, framework",
-            parameters,
+    def _snapshot_path(self, filename: str) -> Path:
+        return self.project_root / "data" / "analytics" / filename
+
+    @property
+    def uses_packaged_analytics(self) -> bool:
+        filenames = (
+            "selected_plans_research_ready.parquet",
+            "matched_framework_results.parquet",
+            "fixed_plan_oc_evaluations.parquet",
         )
+        return all(self._snapshot_path(filename).is_file() for filename in filenames)
+
+    @cached_property
+    def _selected(self) -> pd.DataFrame:
+        snapshot = self._snapshot_path("selected_plans_research_ready.parquet")
+        if snapshot.is_file():
+            return pd.read_parquet(snapshot)
+        return self._query("SELECT * FROM research.selected_plans ORDER BY scenario_id, prior_id, framework")
+
+    @cached_property
+    def _matched(self) -> pd.DataFrame:
+        snapshot = self._snapshot_path("matched_framework_results.parquet")
+        if snapshot.is_file():
+            return pd.read_parquet(snapshot)
+        return self._query("SELECT * FROM research.matched_framework_results ORDER BY scenario_id, prior_id")
+
+    @cached_property
+    def _fixed_oc(self) -> pd.DataFrame:
+        snapshot = self._snapshot_path("fixed_plan_oc_evaluations.parquet")
+        if snapshot.is_file():
+            return pd.read_parquet(snapshot)
+        return self._query("SELECT * FROM research.fixed_plan_oc ORDER BY fixed_plan_id, evaluation_mean_life_ratio")
+
+    def selected_plans(self, filters: dict[str, Iterable[Any]] | None = None) -> pd.DataFrame:
+        self._where(filters, set(FILTER_COLUMNS))
+        return _filtered_frame(self._selected, filters)
 
     def matched_results(self, filters: dict[str, Iterable[Any]] | None = None) -> pd.DataFrame:
         allowed = set(FILTER_COLUMNS) - {"framework"}
-        where, parameters = self._where(filters, allowed)
-        return self._query(
-            "SELECT * FROM research.matched_framework_results" + where + " ORDER BY scenario_id, prior_id",
-            parameters,
-        )
+        self._where(filters, allowed)
+        return _filtered_frame(self._matched, filters)
 
     def fixed_plan_oc(self, filters: dict[str, Iterable[Any]] | None = None) -> pd.DataFrame:
         allowed = set(FILTER_COLUMNS) - {"acceptable_mean_life_ratio"}
-        where, parameters = self._where(filters, allowed)
-        return self._query(
-            "SELECT * FROM research.fixed_plan_oc" + where + " ORDER BY fixed_plan_id, evaluation_mean_life_ratio",
-            parameters,
-        )
+        self._where(filters, allowed)
+        return _filtered_frame(self._fixed_oc, filters)
 
-    def candidate_trace(self, scenario_id: str, prior_id: str) -> pd.DataFrame:
-        return self._query(
+    def _candidate_trace_cached(self, scenario_id: str, prior_id: str) -> pd.DataFrame:
+        key = (scenario_id, prior_id)
+        with self._candidate_cache_lock:
+            cached = self._candidate_cache.get(key)
+            if cached is not None:
+                self._candidate_cache.move_to_end(key)
+                return cached
+
+        frame = self._query(
             "SELECT * FROM research.candidate_results "
             "WHERE scenario_id=:scenario_id AND prior_id=:prior_id ORDER BY candidate_g",
             {"scenario_id": scenario_id, "prior_id": prior_id},
         )
+        with self._candidate_cache_lock:
+            self._candidate_cache[key] = frame
+            self._candidate_cache.move_to_end(key)
+            while len(self._candidate_cache) > 32:
+                self._candidate_cache.popitem(last=False)
+        return frame
 
-    def dataset_counts(self) -> dict[str, int]:
+    def candidate_trace(self, scenario_id: str, prior_id: str) -> pd.DataFrame:
+        return self._candidate_trace_cached(scenario_id, prior_id).copy()
+
+    @cached_property
+    def _dataset_counts(self) -> dict[str, int]:
+        validation_path = self.project_root / "data" / "neon_deployment_validation.json"
+        if validation_path.is_file():
+            payload = json.loads(validation_path.read_text(encoding="utf-8"))
+            database = payload.get("database", {})
+            required = {
+                "candidate_records",
+                "selected_records",
+                "matched_records",
+                "candidate_partitions",
+            }
+            if required.issubset(database):
+                return {
+                    name: int(database[name])
+                    for name in (
+                        "candidate_records",
+                        "selected_records",
+                        "matched_records",
+                        "candidate_partitions",
+                    )
+                }
+
         row = self._query(
             "SELECT "
             "(SELECT count(*) FROM research.candidate_results) AS candidate_records, "
@@ -241,15 +307,21 @@ class NeonResultsRepository(ResearchRepository):
             "selected_records": int(row.selected_records),
             "matched_records": int(row.matched_records),
             "candidate_partitions": int(row.candidate_partitions),
-            "charts": len(self.chart_paths()),
         }
 
-    def validation_summary(self) -> dict[str, Any]:
+    def dataset_counts(self) -> dict[str, int]:
+        return {**self._dataset_counts, "charts": len(self.chart_paths())}
+
+    @cached_property
+    def _validation_summary(self) -> dict[str, Any]:
         frame = self._query("SELECT payload FROM research.validation_summary WHERE name='stage10_final'")
         if frame.empty:
             return {}
         payload = frame.iloc[0, 0]
         return payload if isinstance(payload, dict) else json.loads(payload)
+
+    def validation_summary(self) -> dict[str, Any]:
+        return dict(self._validation_summary)
 
     def chart_paths(self) -> list[Path]:
         return sorted((self.project_root / "assets" / "charts").glob("*.png"))

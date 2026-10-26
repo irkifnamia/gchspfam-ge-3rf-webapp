@@ -11,9 +11,11 @@ Validated Stage 6–10 outputs
           |
           +-- local read-only repository (development and verification)
           |
+          +-- compact hashed analytics snapshots --> Streamlit app
+          |
           +-- resumable loader --> Neon PostgreSQL
                                       |
-                                      +-- read-only role --> Streamlit app
+                                      +-- read-only candidate queries --> Streamlit app
 GitHub --> CI checks --> Streamlit Community Cloud deployment
 ```
 
@@ -33,6 +35,12 @@ The normalization stores metadata such as `p1`, `p2`, Beta parameters, and
 design factors once per prior–scenario combination instead of 500 times. All
 risk quantities remain PostgreSQL `double precision` values. The candidate
 fact primary key is `(analysis_unit_id, candidate_g)`.
+
+The three compact analytical tables are also packaged as immutable Parquet
+snapshots. This makes overview, comparison, OC, and sensitivity pages local
+reads after deployment. The full candidate table is not packaged: the app
+queries one 500-row trace from Neon and retains up to 32 recent traces in a
+bounded process-level cache.
 
 ## Research safeguards
 

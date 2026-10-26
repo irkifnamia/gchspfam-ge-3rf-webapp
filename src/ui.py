@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -9,8 +10,76 @@ import streamlit as st
 
 from src.constants import FRAMEWORKS
 
+ROOT = Path(__file__).resolve().parents[1]
+UUM_LOGO = ROOT / "assets" / "branding" / "uum.png"
+NAVIGATION_LINKS = (
+    ("app.py", "OVERVIEW"),
+    ("pages/1_Selected_Plan_Explorer.py", "SELECTED PLAN EXPLORER"),
+    ("pages/2_Framework_Comparison.py", "FRAMEWORK COMPARISON"),
+    ("pages/8_Head_to_Head_Comparison.py", "HEAD-TO-HEAD COMPARISON"),
+    ("pages/3_OC_Explorer.py", "OC EXPLORER"),
+    ("pages/4_Sensitivity_Explorer.py", "SENSITIVITY EXPLORER"),
+    ("pages/5_Candidate_Explorer.py", "ALL CANDIDATE EXPLORER"),
+    ("pages/6_Selected_G_Explorer.py", "SELECTED G EXPLORER"),
+    ("pages/9_Computation_Phases.py", "COMPUTATION PHASES"),
+    ("pages/6_Chart_Gallery.py", "CHART GALLERY"),
+    ("pages/7_Validation_and_Downloads.py", "VALIDATION AND DOWNLOADS"),
+)
+
+
+def render_application_sidebar() -> None:
+    """Render branded navigation and research attribution on every page."""
+    st.sidebar.markdown(
+        """
+        <style>
+          [data-testid="stSidebar"] [data-testid="stPageLink"] p {
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.01em;
+          }
+          .gchsp-sidebar-title {
+            color: #17365D;
+            font-size: 1.28rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            margin: 0.15rem 0 0.55rem;
+            text-align: center;
+          }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.sidebar.image(str(UUM_LOGO), width="stretch")
+    st.sidebar.markdown('<div class="gchsp-sidebar-title">GChSP-GE-3RF</div>', unsafe_allow_html=True)
+    for path, label in NAVIGATION_LINKS:
+        try:
+            st.sidebar.page_link(path, label=label)
+        except KeyError:
+            # Direct AppTest execution has no multipage registry. Production
+            # Streamlit runs always use the page links above.
+            st.sidebar.markdown(f"**{label}**")
+    st.sidebar.divider()
+    st.sidebar.markdown(
+        """
+        **Researcher**
+
+        Aiman Fikri Jamaludin
+
+        **Supervisors**
+
+        - Dr Mohd Azri Pawan Teh
+        - Dr Nazrina Aziz
+
+        **Institution**
+
+        Universiti Utara Malaysia (UUM)
+        """
+    )
+    st.sidebar.divider()
+
 
 def render_page_header(title: str, subtitle: str) -> None:
+    render_application_sidebar()
     st.markdown(
         f"""
         <div style="padding:1.1rem 1.25rem;border-left:6px solid #C9A227;background:#F3F6F9;margin-bottom:1rem">
@@ -24,7 +93,12 @@ def render_page_header(title: str, subtitle: str) -> None:
 
 def render_data_source_badge(repository: Any) -> None:
     if repository.backend_name == "neon":
-        st.caption("Data source: Neon PostgreSQL · read-only production connection")
+        if getattr(repository, "uses_packaged_analytics", False):
+            st.caption(
+                "Data source: validated packaged analytics · full candidate data from Neon PostgreSQL · read-only"
+            )
+        else:
+            st.caption("Data source: Neon PostgreSQL · read-only production connection")
     else:
         st.caption("Data source: validated local Stage 7–10 outputs · read-only mode")
 

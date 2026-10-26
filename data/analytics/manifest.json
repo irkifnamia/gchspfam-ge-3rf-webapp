@@ -1,0 +1,26 @@
+[
+  {
+    "filename": "selected_plans_research_ready.parquet",
+    "source": "outputs\\analytics\\selected_plans_research_ready.parquet",
+    "records": 15552,
+    "columns": 34,
+    "size_bytes": 642628,
+    "sha256": "751484083003998d6e1fed0341d4c71f1927d4bb935e40dc2dbe0f7504997d7c"
+  },
+  {
+    "filename": "matched_framework_results.parquet",
+    "source": "outputs\\analytics\\matched_framework_results.parquet",
+    "records": 5184,
+    "columns": 71,
+    "size_bytes": 888396,
+    "sha256": "5e7a26a293772786bd91a436ac75d36adaa80ede1adaa64ba100f0a2eee9420d"
+  },
+  {
+    "filename": "fixed_plan_oc_evaluations.parquet",
+    "source": "outputs\\stage9\\data\\fixed_plan_oc_evaluations.csv",
+    "records": 15552,
+    "columns": 19,
+    "size_bytes": 54839,
+    "sha256": "6478b70d1226ac2cf1cb08769179e9471981fc6dda1d0537d1ed550fce30afcd"
+  }
+]

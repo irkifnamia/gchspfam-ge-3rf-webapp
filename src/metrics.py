@@ -6,6 +6,74 @@ import pandas as pd
 
 from src.constants import FRAMEWORKS
 
+CANDIDATE_FEASIBILITY_COLUMNS = {
+    "Classical": "classical_feasible",
+    "Average": "average_feasible",
+    "Bayesian": "bayesian_feasible",
+}
+
+WINNER_CATEGORY_ORDER = (
+    "Bayesian win",
+    "Average win",
+    "Classical win",
+    "Bayesian & Average tie",
+    "Bayesian & Classical tie",
+    "Average & Classical tie",
+    "Three-way tie",
+)
+
+WINNER_LABELS = {
+    frozenset({"Bayesian"}): "Bayesian win",
+    frozenset({"Average"}): "Average win",
+    frozenset({"Classical"}): "Classical win",
+    frozenset({"Bayesian", "Average"}): "Bayesian & Average tie",
+    frozenset({"Bayesian", "Classical"}): "Bayesian & Classical tie",
+    frozenset({"Average", "Classical"}): "Average & Classical tie",
+    frozenset(FRAMEWORKS): "Three-way tie",
+}
+
+
+def first_feasible_groups(trace: pd.DataFrame) -> dict[str, int | None]:
+    """Return the smallest feasible candidate g for each risk framework."""
+    required = {"candidate_g", *CANDIDATE_FEASIBILITY_COLUMNS.values()}
+    missing = required.difference(trace.columns)
+    if missing:
+        raise ValueError(f"Candidate trace is missing required columns: {sorted(missing)}")
+
+    ordered = trace.sort_values("candidate_g", kind="stable")
+    selected: dict[str, int | None] = {}
+    for framework, feasible_column in CANDIDATE_FEASIBILITY_COLUMNS.items():
+        feasible = ordered.loc[ordered[feasible_column].astype(bool), "candidate_g"]
+        selected[framework] = None if feasible.empty else int(feasible.iloc[0])
+    return selected
+
+
+def framework_win_percentages(
+    wide: pd.DataFrame,
+    *,
+    higher_is_better: bool,
+    tolerance: float = 0.0,
+) -> pd.DataFrame:
+    """Classify three-framework wins and ties for complete matched rows."""
+    missing = set(FRAMEWORKS).difference(wide.columns)
+    if missing:
+        raise ValueError(f"Comparison table is missing framework columns: {sorted(missing)}")
+
+    complete = wide[list(FRAMEWORKS)].dropna()
+    labels: list[str] = []
+    for values in complete.itertuples(index=False, name=None):
+        target = max(values) if higher_is_better else min(values)
+        winners = frozenset(
+            framework for framework, value in zip(FRAMEWORKS, values, strict=True) if abs(value - target) <= tolerance
+        )
+        labels.append(WINNER_LABELS[winners])
+
+    counts = pd.Series(labels, dtype="string").value_counts().reindex(WINNER_CATEGORY_ORDER, fill_value=0)
+    result = counts.rename_axis("outcome").reset_index(name="count")
+    denominator = len(complete)
+    result["percentage"] = 0.0 if denominator == 0 else 100.0 * result["count"] / denominator
+    return result
+
 
 def framework_overview(selected: pd.DataFrame) -> pd.DataFrame:
     return (
