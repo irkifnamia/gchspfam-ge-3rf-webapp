@@ -83,4 +83,27 @@ with right:
         width="stretch",
     )
 
+st.subheader("Mean own-risk comparisons")
+risk_chart_specs = (
+    ("mean_own_cr", "Mean own consumer risk", "Mean own consumer risk"),
+    ("mean_own_pr", "Mean own producer risk", "Mean own producer risk"),
+    ("mean_own_risk_sum", "Mean own risk sum", "Mean own risk sum"),
+)
+risk_columns = st.columns(3)
+for container, (metric, title, axis_label) in zip(risk_columns, risk_chart_specs, strict=True):
+    with container:
+        figure = px.bar(
+            overview,
+            x="framework",
+            y=metric,
+            color="framework",
+            color_discrete_map=FRAMEWORK_COLORS,
+            category_orders={"framework": list(FRAMEWORK_COLORS)},
+            labels={"framework": "Framework", metric: axis_label},
+            text_auto=".6f",
+        )
+        figure = apply_academic_layout(figure, title)
+        figure.update_layout(showlegend=False, margin={"l": 50, "r": 15, "t": 95, "b": 60})
+        st.plotly_chart(figure, width="stretch")
+
 render_footer()
