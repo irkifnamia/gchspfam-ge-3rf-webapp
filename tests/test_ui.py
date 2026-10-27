@@ -12,7 +12,7 @@ def test_sidebar_navigation_order_and_labels():
         "ALL CANDIDATE EXPLORER",
         "SELECTED PLAN EXPLORER",
         "SELECTED G EXPLORER",
-        "OC EXPLORER",
+        "L(P) EXPLORER",
         "SENSITIVITY EXPLORER",
         "GENERAL COMPARISON",
         "HEAD-TO-HEAD COMPARISON",

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS, FRAMEWORKS
+from src.oc import gchsp_acceptance_probability
 from src.runtime import get_repository
 from src.ui import apply_global_filters, dataframe_download, render_page_header
 
@@ -212,6 +214,44 @@ else:
             "Failure probability p": st.column_config.NumberColumn(format="%.10f"),
             "Acceptance probability L(p)": st.column_config.NumberColumn(format="%.10f"),
         },
+    )
+
+    p_grid = np.linspace(0.0, 1.0, 501)
+    selected_plan_curve = pd.DataFrame(
+        {
+            "failure_probability_p": p_grid,
+            "l_p": gchsp_acceptance_probability(p_grid, g=selected_g, r=r, i=i),
+        }
+    )
+    oc_curve = px.line(
+        selected_plan_curve,
+        x="failure_probability_p",
+        y="l_p",
+        hover_data={"failure_probability_p": ":.4f", "l_p": ":.6f"},
+        labels={
+            "failure_probability_p": "Failure probability p",
+            "l_p": "Acceptance probability L(p)",
+        },
+        color_discrete_sequence=[FRAMEWORK_COLORS[framework]],
+    )
+    oc_curve.add_vline(
+        x=float(plan["p1"]),
+        line_dash="dash",
+        line_color="#2E7D32",
+        annotation_text="p₁",
+        annotation_position="top left",
+    )
+    oc_curve.add_vline(
+        x=float(plan["p2"]),
+        line_dash="dot",
+        line_color="#C62828",
+        annotation_text="p₂",
+        annotation_position="top right",
+    )
+    oc_curve.update_yaxes(range=[0.0, 1.01])
+    st.plotly_chart(
+        apply_academic_layout(oc_curve, f"OC curve for the selected {framework} plan: L(p) versus p"),
+        width="stretch",
     )
 
 with st.expander("Research risk details for this selected plan"):

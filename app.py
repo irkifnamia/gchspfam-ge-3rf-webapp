@@ -344,7 +344,7 @@ st.markdown(
    selected \(g^*\), required sample size, risks, OC behavior, and acceptance probabilities.
 3. Use **All Candidate Explorer** and **Selected g Explorer** to inspect the candidate group
    counts and see exactly where each framework first satisfies its consumer-risk restriction.
-4. Use **OC Explorer** and **Sensitivity Explorer** to study acceptance behavior across
+4. Use **L(p) Explorer** and **Sensitivity Explorer** to study acceptance behavior across
    mean-life ratios and the effects of the design parameters.
 5. Use **General Comparison** and **Head-to-Head Comparison** for framework-level comparisons,
    then consult **Chart Gallery** for publication-quality figures.

@@ -1,18 +1,21 @@
-"""Fixed-plan operating-characteristic exploration."""
+"""Fixed-plan acceptance-probability exploration."""
 
 from __future__ import annotations
 
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 from src.charts import apply_academic_layout
 from src.constants import FRAMEWORK_COLORS
+from src.oc import gchsp_acceptance_probability
 from src.runtime import get_repository
 from src.ui import apply_global_filters, render_data_source_badge, render_footer, render_page_header
 
-st.set_page_config(page_title="OC Explorer", page_icon="📈", layout="wide")
+st.set_page_config(page_title="L(p) Explorer", page_icon="📈", layout="wide")
 render_page_header(
-    "OC Explorer",
+    "L(p) Explorer",
     "Hold the consumer-risk-selected plan fixed while evaluating acceptance across mean-life ratios.",
 )
 repository = get_repository()
@@ -58,6 +61,43 @@ st.plotly_chart(
 
 plan_table = subset[["framework", "selected_g", "selected_n", "consumer_risk_limit"]].drop_duplicates()
 st.dataframe(plan_table, width="stretch", hide_index=True)
+
+p_grid = np.linspace(0.0, 1.0, 501)
+curve_frames = []
+for plan in plan_table.itertuples(index=False):
+    curve_frames.append(
+        pd.DataFrame(
+            {
+                "failure_probability_p": p_grid,
+                "l_p": gchsp_acceptance_probability(
+                    p_grid,
+                    g=int(plan.selected_g),
+                    r=int(group_size),
+                    i=int(chain),
+                ),
+                "framework": plan.framework,
+                "selected_g": int(plan.selected_g),
+            }
+        )
+    )
+oc_curves = pd.concat(curve_frames, ignore_index=True)
+oc_figure = px.line(
+    oc_curves,
+    x="failure_probability_p",
+    y="l_p",
+    color="framework",
+    color_discrete_map=FRAMEWORK_COLORS,
+    category_orders={"framework": list(FRAMEWORK_COLORS)},
+    hover_data={"selected_g": True, "failure_probability_p": ":.4f", "l_p": ":.6f"},
+    labels={
+        "failure_probability_p": "Failure probability p",
+        "l_p": "Acceptance probability L(p)",
+        "framework": "Selected by",
+        "selected_g": "Selected g*",
+    },
+)
+oc_figure.update_yaxes(range=[0.0, 1.01])
+st.plotly_chart(apply_academic_layout(oc_figure, "OC curves: L(p) versus p"), width="stretch")
 
 st.info(
     "The plotted g⁎ is fixed across evaluation ratios. Consumer-risk selection depends on p₂=p(1; a, λ), "

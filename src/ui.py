@@ -16,7 +16,7 @@ NAVIGATION_LINKS = (
     ("pages/5_Candidate_Explorer.py", "ALL CANDIDATE EXPLORER"),
     ("pages/1_Selected_Plan_Explorer.py", "SELECTED PLAN EXPLORER"),
     ("pages/6_Selected_G_Explorer.py", "SELECTED G EXPLORER"),
-    ("pages/3_OC_Explorer.py", "OC EXPLORER"),
+    ("pages/3_OC_Explorer.py", "L(P) EXPLORER"),
     ("pages/4_Sensitivity_Explorer.py", "SENSITIVITY EXPLORER"),
     ("pages/2_Framework_Comparison.py", "GENERAL COMPARISON"),
     ("pages/8_Head_to_Head_Comparison.py", "HEAD-TO-HEAD COMPARISON"),
