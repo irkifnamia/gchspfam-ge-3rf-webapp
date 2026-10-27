@@ -6,108 +6,12 @@ import streamlit as st
 
 from src.ui import render_footer, render_page_header
 
-PHASES = (
-    (
-        3,
-        "OC Function Formulation",
-        "Define the GChSP acceptance probability from current and preceding lots.",
-        "#F28C28",
-    ),
-    (
-        4,
-        "P₀ and P₁ Derivation",
-        "Derive the zero- and one-failure terms and substitute them into the OC function.",
-        "#7C3AED",
-    ),
-    (
-        5,
-        "Fraction Defective",
-        "Map the corrected GE lifetime model and mean-life ratio to failure probability p.",
-        "#D81B60",
-    ),
-    (6, "Input Specification", "Set classical quality points and the nine shared Beta priors.", "#D9A400"),
-    (
-        7,
-        "Risk Computation",
-        "Evaluate Classical, normalized Average, and Bayesian producer and consumer risks.",
-        "#6D28D9",
-    ),
-    (
-        8,
-        "Selection of g⁎",
-        "Choose the smallest integer g satisfying only the framework's consumer-risk restriction.",
-        "#E83E8C",
-    ),
-    (
-        9,
-        "Performance Evaluation",
-        "Compare sampling requirements, risks, and acceptance behavior across frameworks.",
-        "#C69200",
-    ),
-)
-
-
-def phase_card(number: int, title: str, summary: str, color: str) -> None:
-    st.markdown(
-        f"""
-        <div class="phase-card" style="border-left-color:{color}">
-          <div class="phase-number" style="background:{color}">{number}</div>
-          <div>
-            <div class="phase-title">PHASE {number} · {title}</div>
-            <div class="phase-summary">{summary}</div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 st.set_page_config(page_title="Phases", page_icon="🧭", layout="wide")
 render_page_header(
     "Phases",
     "A reproducible Phase 3–9 flow from the GChSP operating characteristic to framework comparison.",
 )
-st.markdown(
-    r"""
-    <style>
-      .phase-card {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.9rem 1rem;
-        margin: 0.15rem 0;
-        border-left: 7px solid;
-        border-radius: 0.45rem;
-        background: #F7F9FC;
-        box-shadow: 0 1px 2px rgba(23, 54, 93, 0.08);
-      }
-      .phase-number {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 2.65rem;
-        height: 2.65rem;
-        border-radius: 50%;
-        color: white;
-        font-size: 1.25rem;
-        font-weight: 800;
-      }
-      .phase-title { color: #17365D; font-weight: 800; letter-spacing: 0.02em; }
-      .phase-summary { color: #405060; margin-top: 0.2rem; }
-      .phase-arrow { text-align: center; color: #8090A0; font-size: 1.35rem; line-height: 1.1; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 expand_all = st.toggle("Expand all mathematical details", value=False)
-
-for position, (number, title, summary, color) in enumerate(PHASES):
-    phase_card(number, title, summary, color)
-    if position < len(PHASES) - 1:
-        st.markdown('<div class="phase-arrow">↓</div>', unsafe_allow_html=True)
-
-st.divider()
 st.subheader("How the result datasets were computed")
 st.markdown(
     r"""
