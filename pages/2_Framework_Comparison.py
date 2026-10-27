@@ -66,6 +66,7 @@ with left:
     st.plotly_chart(apply_academic_layout(figure, f"Matched distribution: {metric_label}"), width="stretch")
 
 with right:
+    st.markdown(f"#### Direction of {metric_label} differences")
     comparison = st.selectbox(
         "Pairwise direction", ["Bayesian vs Classical", "Bayesian vs Average", "Average vs Classical"]
     )
@@ -94,7 +95,9 @@ with right:
         labels={"x": "Percentage", "y": "", "direction": "First framework is"},
     )
     figure.update_layout(barmode="stack")
-    st.plotly_chart(apply_academic_layout(figure, f"Direction of {metric_label} differences"), width="stretch")
+    figure = apply_academic_layout(figure, "")
+    figure.update_layout(title=None, margin={"l": 55, "r": 25, "t": 110, "b": 55})
+    st.plotly_chart(figure, width="stretch")
     st.caption(
         f"Mean paired difference ({first} − {second}): {difference.mean():.8g}; "
         f"median: {difference.median():.8g}; pairs: {len(difference):,}."
