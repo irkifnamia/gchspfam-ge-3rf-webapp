@@ -58,9 +58,9 @@ def winner_bar(data: pd.DataFrame, title: str) -> None:
     st.plotly_chart(apply_academic_layout(figure, title), width="stretch")
 
 
-st.set_page_config(page_title="Head-to-Head Comparison", page_icon="🥇", layout="wide")
+st.set_page_config(page_title="Comparison 2.0", page_icon="🥇", layout="wide")
 render_page_header(
-    "Head-to-Head Comparison",
+    "Comparison 2.0",
     "Compare selected g⁎ and fixed-plan acceptance probability across Classical, Average, and Bayesian frameworks.",
 )
 repository = get_repository()

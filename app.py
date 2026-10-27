@@ -1,14 +1,10 @@
-"""Landing page for the GChSPFAM-GE-3RF research dashboard."""
+"""Research introduction for the GChSPFAM-GE-3RF dashboard."""
 
 from __future__ import annotations
 
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 
-from src.charts import apply_academic_layout
-from src.constants import FRAMEWORK_COLORS
-from src.metrics import framework_overview
 from src.runtime import get_repository
 from src.ui import apply_global_filters, render_data_source_badge, render_footer, render_page_header
 
@@ -59,7 +55,7 @@ def beta_prior_table() -> pd.DataFrame:
 
 
 st.set_page_config(
-    page_title="Overview",
+    page_title="Introduction",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -67,7 +63,7 @@ st.set_page_config(
 
 # Pass an explicit empty subtitle so rolling Streamlit deployments remain
 # compatible with both the previous and current shared-header signatures.
-render_page_header("Overview", "")
+render_page_header("Introduction", "")
 
 repository = get_repository()
 render_data_source_badge(repository)
@@ -76,19 +72,19 @@ selected = apply_global_filters(repository.selected_plans())
 if selected.empty:
     st.warning("No research records match the active global filters.")
     st.stop()
-overview = framework_overview(selected)
 matched_units = selected[["scenario_id", "prior_id"]].drop_duplicates()
 candidate_records = len(matched_units) * 500
 
 st.header("1. Project Introduction")
-st.markdown(
-    """
+with st.expander("Industry workflow: steps 1–8", expanded=False):
+    st.markdown(
+        """
 This project develops a **Group Chain Sampling Plan (GChSP)** for truncated product-lifetime
 testing under the **Generalized Exponential (GE) distribution**. The application compares three
 risk frameworks while preserving one selection rule: choose the smallest number of groups that
 satisfies the selected framework's consumer-risk ceiling.
 """
-)
+    )
 
 with st.expander("Research question and mathematical model", expanded=True):
     st.markdown(
@@ -216,8 +212,9 @@ st.info(
     f"(r, i)=({example_r}, {example_i}), selected g⁎={example_g}, n⁎={example_n}, "
     f"BCR={example_consumer_risk:.6f}."
 )
-st.markdown(
-    """
+with st.expander("Industry workflow: steps 1–8", expanded=False):
+    st.markdown(
+        """
     <style>
       .industry-flow {
         display: flex;
@@ -269,88 +266,12 @@ st.markdown(
       <div class="industry-arrow">&#8595;</div>
       <div class="industry-step"><div class="industry-number">8</div><div><strong>Record, update, and review</strong><ul><li>Store the inputs, sampled-item IDs, failure data, decision, and responsible personnel.</li><li>Update the chain history because this result affects future lots when <em>d=1</em>.</li><li>Periodically review whether the GE model, prior information, and process conditions remain valid before reusing the plan.</li></ul></div></div>
     </div>
-    """,
-    unsafe_allow_html=True,
-)
-st.caption(
-    "This is a simulated implementation guide. Operational use must follow the organization's "
-    "approved sampling, traceability, safety, and regulatory procedures."
-)
-
-st.header("3. Three Risk Frameworks Overview")
-framework_columns = st.columns(3)
-with framework_columns[0]:
-    st.markdown(
-        """
-        **Classical**
-
-        Evaluates producer and consumer risks at two fixed values of the fraction defective representing
-        acceptable and limiting quality. It does not use a Beta prior.
-        """
+        """,
+        unsafe_allow_html=True,
     )
-with framework_columns[1]:
-    st.markdown(
-        """
-        **Average**
-
-        Averages the OC-based risks over the relevant good- and bad-quality regions under a
-        Beta distribution, conditional on being inside each region.
-        """
+    st.caption(
+        "This is a simulated implementation guide. Operational use must follow the organization's "
+        "approved sampling, traceability, safety, and regulatory procedures."
     )
-with framework_columns[2]:
-    st.markdown(
-        """
-        **Bayesian**
-
-        Uses the same Beta prior and expresses producer and consumer risks as posterior-style
-        conditional probabilities following rejection or acceptance.
-        """
-    )
-
-left, right = st.columns(2)
-with left:
-    figure = px.bar(
-        overview,
-        x="framework",
-        y="mean_selected_g",
-        color="framework",
-        color_discrete_map=FRAMEWORK_COLORS,
-        labels={"framework": "Framework", "mean_selected_g": "Mean selected g⁎"},
-        text_auto=".3f",
-    )
-    st.plotly_chart(apply_academic_layout(figure, "Mean selected number of groups"), width="stretch")
-with right:
-    figure = px.bar(
-        overview,
-        x="framework",
-        y="mean_l_p1",
-        color="framework",
-        color_discrete_map=FRAMEWORK_COLORS,
-        labels={"framework": "Framework", "mean_l_p1": "Mean L(p₁)"},
-        text_auto=".4f",
-    )
-    st.plotly_chart(
-        apply_academic_layout(figure, "Mean acceptable-quality acceptance probability"),
-        width="stretch",
-    )
-
-st.header("4. How to Use This Dashboard")
-st.markdown(
-    r"""
-1. Use **Global Filters** in the sidebar to restrict the entire dashboard by Beta prior,
-   mean-life ratio, termination multiplier, GE shape, group size, or chain parameter. Leaving a
-   filter empty includes every available value.
-2. Open **Selected Plan Explorer** to review one complete industry sampling plan, including its
-   selected \(g^*\), required sample size, risks, OC behavior, and acceptance probabilities.
-3. Use **All Candidate Explorer** and **Selected g Explorer** to inspect the candidate group
-   counts and see exactly where each framework first satisfies its consumer-risk restriction.
-4. Use **L(p) Explorer** and **Sensitivity Explorer** to study acceptance behavior across
-   mean-life ratios and the effects of the design parameters.
-5. Use **General Comparison** and **Head-to-Head Comparison** for framework-level comparisons,
-   then consult **Chart Gallery** for publication-quality figures.
-6. Visit **Phases** for the complete computational explanation and **Downloads** to export
-   filtered research-ready data for independent analysis.
-"""
-)
 
 render_footer()

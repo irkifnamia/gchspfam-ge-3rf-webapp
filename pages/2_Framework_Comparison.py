@@ -12,9 +12,9 @@ from src.constants import FRAMEWORK_COLORS, PAIRWISE_COLORS
 from src.runtime import get_repository
 from src.ui import apply_global_filters, render_data_source_badge, render_footer, render_page_header
 
-st.set_page_config(page_title="General Comparison", page_icon="⚖️", layout="wide")
+st.set_page_config(page_title="Comparison 1.0", page_icon="⚖️", layout="wide")
 render_page_header(
-    "General Comparison",
+    "Comparison 1.0",
     "Compare Classical, Average, and Bayesian plans on the same prior–scenario units.",
 )
 repository = get_repository()

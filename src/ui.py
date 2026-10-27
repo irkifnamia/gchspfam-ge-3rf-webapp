@@ -11,15 +11,16 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 UUM_LOGO = ROOT / "assets" / "branding" / "uum.png"
 NAVIGATION_LINKS = (
-    ("app.py", "OVERVIEW"),
+    ("app.py", "INTRODUCTION"),
+    ("pages/0_Overview.py", "OVERVIEW"),
     ("pages/9_Computation_Phases.py", "PHASES"),
     ("pages/5_Candidate_Explorer.py", "ALL CANDIDATE EXPLORER"),
     ("pages/1_Selected_Plan_Explorer.py", "SELECTED PLAN EXPLORER"),
     ("pages/6_Selected_G_Explorer.py", "SELECTED G EXPLORER"),
     ("pages/3_OC_Explorer.py", "L(P) EXPLORER"),
     ("pages/4_Sensitivity_Explorer.py", "SENSITIVITY EXPLORER"),
-    ("pages/2_Framework_Comparison.py", "GENERAL COMPARISON"),
-    ("pages/8_Head_to_Head_Comparison.py", "HEAD-TO-HEAD COMPARISON"),
+    ("pages/2_Framework_Comparison.py", "COMPARISON 1.0"),
+    ("pages/8_Head_to_Head_Comparison.py", "COMPARISON 2.0"),
     ("pages/6_Chart_Gallery.py", "CHART GALLERY"),
     ("pages/7_Validation_and_Downloads.py", "DOWNLOADS"),
 )

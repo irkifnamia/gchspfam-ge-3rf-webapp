@@ -7,6 +7,7 @@ from src.ui import GLOBAL_FILTER_OPTIONS, NAVIGATION_LINKS, apply_global_filters
 
 def test_sidebar_navigation_order_and_labels():
     assert [label for _path, label in NAVIGATION_LINKS] == [
+        "INTRODUCTION",
         "OVERVIEW",
         "PHASES",
         "ALL CANDIDATE EXPLORER",
@@ -14,8 +15,8 @@ def test_sidebar_navigation_order_and_labels():
         "SELECTED G EXPLORER",
         "L(P) EXPLORER",
         "SENSITIVITY EXPLORER",
-        "GENERAL COMPARISON",
-        "HEAD-TO-HEAD COMPARISON",
+        "COMPARISON 1.0",
+        "COMPARISON 2.0",
         "CHART GALLERY",
         "DOWNLOADS",
     ]
