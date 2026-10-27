@@ -31,7 +31,7 @@ def gradient_styles(series: pd.Series, light: str, dark: str) -> list[str]:
 st.set_page_config(page_title="Selected g Explorer", page_icon="🔢", layout="wide")
 render_page_header(
     "Selected g Explorer",
-    "Inspect all candidate group counts and compare Classical, Average, and Bayesian selected g* across matched scenarios.",
+    "Inspect all candidate group counts and compare Classical, Average, and Bayesian selected g⁎ across matched scenarios.",
 )
 repository = get_repository()
 render_data_source_badge(repository)
@@ -97,8 +97,8 @@ for framework, columns in risk_columns.items():
     summary_rows.append(
         {
             "Framework": framework,
-            "Selected g*": g_value,
-            "Selected n*": None if selected_row is None else int(selected_row["candidate_n"]),
+            "Selected g⁎": g_value,
+            "Selected n⁎": None if selected_row is None else int(selected_row["candidate_n"]),
             "Own producer risk": None if selected_row is None else float(selected_row[columns["producer"]]),
             "Own consumer risk": None if selected_row is None else float(selected_row[columns["consumer"]]),
             "Own risk sum": None if selected_row is None else float(selected_row[columns["sum"]]),
@@ -144,7 +144,7 @@ candidate_table = trace[
         "bcr": "BCR",
     }
 )
-candidate_table["Selected g*"] = candidate_table["g"].map(
+candidate_table["Selected g⁎"] = candidate_table["g"].map(
     lambda value: ", ".join(framework for framework, selected in selected_g.items() if selected == value)
 )
 candidate_range = st.slider(
@@ -173,7 +173,7 @@ st.dataframe(
 )
 st.caption("Risk gradients: CR uses blue, ACR uses green, and BCR uses gold; darker cells indicate larger values.")
 st.caption(
-    "CR, ACR, and BCR retain their distinct conditioning definitions. Each selected g* is the first row where its own consumer risk is at most 0.10."
+    "CR, ACR, and BCR retain their distinct conditioning definitions. Each selected g⁎ is the first row where its own consumer risk is at most 0.10."
 )
 dataframe_download(
     candidate_view,
@@ -182,7 +182,7 @@ dataframe_download(
 )
 
 st.divider()
-st.subheader("Matched-scenario selected g* heatmaps")
+st.subheader("Matched-scenario selected g⁎ heatmaps")
 st.write(
     "Choose a prior, GE shape, and GChSP design. The three heatmaps use the same scale, so cell colors are directly comparable across frameworks."
 )
@@ -229,12 +229,12 @@ for panel, (framework, value_column) in zip(heatmap_panels, heatmap_columns.item
         aspect="auto",
         color_continuous_scale=[[0.0, "#F3F6F9"], [1.0, FRAMEWORK_COLORS[framework]]],
         range_color=(color_min, color_max),
-        labels={"x": "ρA", "y": "Termination multiplier a", "color": "g*"},
+        labels={"x": "ρA", "y": "Termination multiplier a", "color": "g⁎"},
     )
     heatmap.update_layout(
-        title={"text": f"{framework} selected g*", "x": 0.5, "xanchor": "center"},
+        title={"text": f"{framework} selected g⁎", "x": 0.5, "xanchor": "center"},
         margin={"l": 25, "r": 10, "t": 55, "b": 35},
-        coloraxis_colorbar={"title": "g*", "thickness": 10},
+        coloraxis_colorbar={"title": "g⁎", "thickness": 10},
     )
     with panel:
         st.plotly_chart(heatmap, width="stretch")
@@ -259,9 +259,9 @@ heatmap_table = heatmap_scope[
         "acceptable_mean_life_ratio": "ρA",
         "group_size_r": "r",
         "chain_parameter_i": "i",
-        "classical_selected_g": "Classical g*",
-        "average_selected_g": "Average g*",
-        "bayesian_selected_g": "Bayesian g*",
+        "classical_selected_g": "Classical g⁎",
+        "average_selected_g": "Average g⁎",
+        "bayesian_selected_g": "Bayesian g⁎",
     }
 )
 heatmap_table = heatmap_table.sort_values(["a", "ρA"], kind="stable")

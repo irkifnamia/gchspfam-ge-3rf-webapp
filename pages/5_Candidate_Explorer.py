@@ -124,11 +124,13 @@ default_columns = [
     "average_feasible",
     "bayesian_feasible",
 ]
-selected_columns = st.multiselect(
-    "Columns to display",
-    options=trace.columns.tolist(),
-    default=[column for column in default_columns if column in trace.columns],
-)
+with st.expander("Choose columns to display", expanded=False):
+    selected_columns = st.multiselect(
+        "Candidate-table columns",
+        options=trace.columns.tolist(),
+        default=[column for column in default_columns if column in trace.columns],
+        help="Select the required columns, then collapse this panel to maximize table space.",
+    )
 g_min = int(trace["candidate_g"].min())
 g_max = int(trace["candidate_g"].max())
 g_range = st.slider("Candidate g range", g_min, g_max, (g_min, g_max))

@@ -1,4 +1,4 @@
-"""Three-framework head-to-head comparisons for g* and fixed-plan L(p)."""
+"""Three-framework head-to-head comparisons for selected groups and acceptance probability."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def winner_bar(data: pd.DataFrame, title: str) -> None:
 st.set_page_config(page_title="Head-to-Head Comparison", page_icon="🥇", layout="wide")
 render_page_header(
     "Head-to-Head Comparison",
-    "Compare selected g* and fixed-plan acceptance probability across Classical, Average, and Bayesian frameworks.",
+    "Compare selected g⁎ and fixed-plan acceptance probability across Classical, Average, and Bayesian frameworks.",
 )
 repository = get_repository()
 render_data_source_badge(repository)
@@ -71,12 +71,17 @@ if selected.empty or oc.empty:
     st.warning("The active global filters leave no complete records to compare.")
     st.stop()
 
-st.caption(
-    "For selected g*, smaller is the winning outcome. For L(p) at an evaluated mean-life ratio, larger acceptance "
-    "probability is the winning outcome. Exact g ties and numerical L(p) ties within 5×10⁻¹² are retained."
+st.markdown(
+    r"""
+- **Selected $g^*$ comparison:** the framework requiring fewer groups is the winning outcome.
+- **Acceptance-probability comparison:** at each evaluated mean-life ratio, the framework with
+  the larger $L(p)$ is the winning outcome.
+- **Ties:** exact selected-$g^*$ ties and numerical $L(p)$ ties within $5\times10^{-12}$ are
+  retained as explicit tie categories.
+"""
 )
 
-st.subheader("1. Selected g* comparison across scenarios")
+st.subheader("1. Selected g⁎ comparison across scenarios")
 g_keys = ["scenario_id", "prior_id"]
 eligible_g = complete_feasible_keys(selected, g_keys)
 selected_comparison = selected.merge(eligible_g, on=g_keys, how="inner")
@@ -111,12 +116,12 @@ g_frequency = (
 )
 g_frequency["percentage"] = 100.0 * g_frequency["count"] / g_frequency.groupby("framework")["count"].transform("sum")
 summary_tab, outcome_tab, distribution_tab = st.tabs(
-    ["Framework summary", "Win and tie percentages", "Distribution of selected g*"]
+    ["Framework summary", "Win and tie percentages", "Distribution of selected g⁎"]
 )
 with summary_tab:
     st.dataframe(g_summary, width="stretch", hide_index=True)
 with outcome_tab:
-    winner_bar(g_winners, "Selected g* head-to-head outcomes")
+    winner_bar(g_winners, "Selected g⁎ head-to-head outcomes")
     st.dataframe(
         g_winners,
         width="stretch",
@@ -138,11 +143,11 @@ with distribution_tab:
         text_auto=".1f",
         aspect="auto",
         color_continuous_scale="Blues",
-        labels={"x": "Selected g*", "y": "Framework", "color": "Percentage"},
+        labels={"x": "Selected g⁎", "y": "Framework", "color": "Percentage"},
     )
     distribution_heatmap.update_layout(margin={"l": 25, "r": 20, "t": 35, "b": 35})
     st.plotly_chart(distribution_heatmap, width="stretch")
-    st.caption("Each cell is the within-framework percentage of globally filtered scenarios selecting that g*.")
+    st.caption("Each cell is the within-framework percentage of globally filtered scenarios selecting that g⁎.")
 
 st.subheader("2. L(p) comparison across mean-life ratios")
 lp_keys = [

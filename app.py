@@ -93,13 +93,15 @@ satisfies the selected framework's consumer-risk ceiling.
 with st.expander("Research question and mathematical model", expanded=True):
     st.markdown(
         """
-        A sample is tested until a predetermined termination time. The observed number of
-        failures determines whether the current production lot is accepted or rejected. When
-        exactly one failure occurs, the GChSP rule also uses the outcomes of preceding lots.
-
-        The corrected GE model first converts the mean-life ratio into a failure probability.
-        The complete GChSP operating-characteristic function then converts that failure
-        probability into the probability of accepting the lot.
+        - **Truncated life test:** test a sample only until the predetermined termination time
+          rather than waiting for every item to fail.
+        - **Current-lot evidence:** count the failures observed before termination.
+        - **Chain information:** when exactly one failure occurs, also examine the outcomes of
+          the preceding $i$ lots.
+        - **GE conversion:** use the corrected GE model to convert the mean-life ratio into the
+          item failure probability $p$.
+        - **Acceptance probability:** evaluate $p$ using the complete GChSP operating-
+          characteristic function $L_g(p)$.
         """
     )
     formula_columns = st.columns(2)
@@ -111,19 +113,32 @@ with st.expander("Research question and mathematical model", expanded=True):
         st.caption("GChSP operating-characteristic function")
         st.latex(r"L_g(p)=(1-p)^{gr}+gr\,p(1-p)^{gr(i+1)-1}")
     st.markdown(
-        "The computation searches integer group counts from 1 through 500 and independently "
-        "selects the first feasible group count for each framework:"
+        "- **Plan selection:** search integer group counts from 1 through 500 and select the first feasible count independently for each framework:"
     )
     st.latex(
         r"g_F^*=\min\left\{g\in\{1,\ldots,500\}:R_F(g)\leq0.10\right\},"
         r"\quad n_F^*=r g_F^*,\quad F\in\{C,A,B\}"
     )
     st.markdown(
-        r"Here, $R_C=CR$, $R_A=ACR$, and $R_B=BCR$. Producer risks and risk sums are "
-        r"calculated only after $g_F^*$ is selected."
+        r"- **Framework restriction:** $R_C=CR$, $R_A=ACR$, and $R_B=BCR$."
+        "\n- **Evaluation only:** producer risks and risk sums are calculated only after "
+        r"$g_F^*$ is selected."
     )
 
-with st.expander("Design parameters used in the experiment", expanded=False):
+with st.expander("Design Parameters & Scenario ID", expanded=False):
+    st.markdown(
+        r"""
+        - A **Scenario ID** is the deterministic label for one specific combination of
+          $(\rho_A,a,\lambda,r,i)$.
+        - The design contains **576 Scenario IDs**: 6 acceptable mean-life ratios × 8
+          termination multipliers × 3 GE shapes × 4 paired $(r,i)$ settings.
+        - A Scenario ID does **not** include the Beta prior or risk framework. Each scenario is
+          crossed with B1–B9 to form 5,184 prior–scenario units, and each unit has separate
+          Classical, Average, and Bayesian selected-plan records.
+        - Consequently, `S001 / B1 / Bayesian` identifies a framework result, while `S001`
+          alone identifies only its underlying design-parameter combination.
+        """
+    )
     st.dataframe(DESIGN_PARAMETERS, width="stretch", hide_index=True)
     st.caption(
         "The four (r, i) combinations are paired design settings; r and i are not crossed "
@@ -132,9 +147,18 @@ with st.expander("Design parameters used in the experiment", expanded=False):
 
 with st.expander("Nine fixed Beta prior combinations", expanded=False):
     st.markdown(
-        "The listed means and standard deviations are prior moments—not Beta shape parameters. "
-        "For every prior, the application computes:"
+        r"""
+        - $p$ is the uncertain lot failure probability before observing the current lot.
+        - The subscript $\pi$ means **prior distribution**; it is not the mathematical constant
+          $\pi=3.14159\ldots$.
+        - $\mu_\pi$ is the specified prior mean of $p$.
+        - $\sigma_\pi$ is the specified prior standard deviation of $p$.
+        - $\kappa$ (kappa) is the implied concentration calculated from those two moments.
+        - $\alpha_\pi$ and $\beta_\pi$ are the positive Beta shape parameters obtained from
+          $\mu_\pi$, $\sigma_\pi$, and $\kappa$.
+        """
     )
+    st.latex(r"p\sim\operatorname{Beta}(\alpha_\pi,\beta_\pi)")
     st.latex(
         r"\kappa=\frac{\mu_\pi(1-\mu_\pi)}{\sigma_\pi^2}-1,\qquad"
         r"\alpha_\pi=\mu_\pi\kappa,\qquad\beta_\pi=(1-\mu_\pi)\kappa"
@@ -161,7 +185,7 @@ metric_columns[4].metric("Consumer-risk ceiling", "0.10")
 
 st.info(
     "All plans use consumer-risk-only optimization. Producer risks and risk sums are evaluated "
-    "after selection; they are never used to choose g*."
+    "after selection; they are never used to choose g⁎."
 )
 
 st.header("2. Industry Application")
@@ -189,7 +213,7 @@ example_consumer_risk = float(example["framework_consumer_risk"])
 st.info(
     f"Worked example: {example_scenario} / {example_prior}, Bayesian framework — "
     f"ρA={example_ratio:g}, a={example_termination:g}, λ={example_shape}, "
-    f"(r, i)=({example_r}, {example_i}), selected g*={example_g}, n*={example_n}, "
+    f"(r, i)=({example_r}, {example_i}), selected g⁎={example_g}, n⁎={example_n}, "
     f"BCR={example_consumer_risk:.6f}."
 )
 st.markdown(
@@ -233,9 +257,9 @@ st.markdown(
       <div class="industry-arrow">&#8595;</div>
       <div class="industry-step"><div class="industry-number">2</div><div><strong>Confirm the statistical design</strong><ul><li>Use the mean-life ratio, termination multiplier, GE shape, group size, and chain parameter displayed in the worked example above.</li><li>Use the Bayesian framework and displayed Beta prior; another framework must use its own selected plan.</li><li>Verify that the GE lifetime assumption and parameter choices remain defensible for the product.</li></ul></div></div>
       <div class="industry-arrow">&#8595;</div>
-      <div class="industry-step"><div class="industry-number">3</div><div><strong>Retrieve and review the selected plan</strong><ul><li>Open Selected Plan Explorer and locate the worked-example scenario and prior.</li><li>Record the computed <em>g*</em>, <em>n*=rg*</em>, acceptance probabilities, and all six risk values.</li><li>Confirm that the plan's own consumer risk satisfies the 0.10 ceiling before testing.</li></ul></div></div>
+      <div class="industry-step"><div class="industry-number">3</div><div><strong>Retrieve and review the selected plan</strong><ul><li>Open Selected Plan Explorer and locate the worked-example scenario and prior.</li><li>Record the computed <em>g</em><sup>*</sup>, <em>n</em><sup>*</sup>=<em>r</em><em>g</em><sup>*</sup>, acceptance probabilities, and all six risk values.</li><li>Confirm that the plan's own consumer risk satisfies the 0.10 ceiling before testing.</li></ul></div></div>
       <div class="industry-arrow">&#8595;</div>
-      <div class="industry-step"><div class="industry-number">4</div><div><strong>Prepare the sample and test</strong><ul><li>Randomly select the required <em>n*</em> representative items from the received lot.</li><li>Arrange the items into <em>g*</em> groups of <em>r</em> items using a documented procedure.</li><li>Set <em>t<sub>0</sub>=a&mu;<sub>0</sub></em>; confirm equipment calibration, operating conditions, and the failure definition.</li></ul></div></div>
+      <div class="industry-step"><div class="industry-number">4</div><div><strong>Prepare the sample and test</strong><ul><li>Randomly select the required <em>n</em><sup>*</sup> representative items from the received lot.</li><li>Arrange the items into <em>g</em><sup>*</sup> groups of <em>r</em> items using a documented procedure.</li><li>Set <em>t<sub>0</sub>=a&mu;<sub>0</sub></em>; confirm equipment calibration, operating conditions, and the failure definition.</li></ul></div></div>
       <div class="industry-arrow">&#8595;</div>
       <div class="industry-step"><div class="industry-number">5</div><div><strong>Run the truncated life test</strong><ul><li>Test all sampled items under the specified conditions until <em>t<sub>0</sub></em>.</li><li>Record every failure time and count the current lot's total failures <em>d</em>.</li><li>Do not change the termination time, sample size, or failure definition after observing results.</li></ul></div></div>
       <div class="industry-arrow">&#8595;</div>
@@ -291,7 +315,7 @@ with left:
         y="mean_selected_g",
         color="framework",
         color_discrete_map=FRAMEWORK_COLORS,
-        labels={"framework": "Framework", "mean_selected_g": "Mean selected g*"},
+        labels={"framework": "Framework", "mean_selected_g": "Mean selected g⁎"},
         text_auto=".3f",
     )
     st.plotly_chart(apply_academic_layout(figure, "Mean selected number of groups"), width="stretch")

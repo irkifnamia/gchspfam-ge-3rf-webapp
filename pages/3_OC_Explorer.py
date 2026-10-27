@@ -60,7 +60,7 @@ plan_table = subset[["framework", "selected_g", "selected_n", "consumer_risk_lim
 st.dataframe(plan_table, width="stretch", hide_index=True)
 
 st.info(
-    "The plotted g* is fixed across evaluation ratios. Consumer-risk selection depends on p₂=p(1;a,λ), "
+    "The plotted g⁎ is fixed across evaluation ratios. Consumer-risk selection depends on p₂=p(1; a, λ), "
     "not on the acceptable design ratio ρA. The evaluation ratio changes p and L(p), not the selected group count."
 )
 render_footer()

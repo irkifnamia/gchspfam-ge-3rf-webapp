@@ -34,7 +34,7 @@ PHASES = (
     ),
     (
         8,
-        "Selection of g*",
+        "Selection of g⁎",
         "Choose the smallest integer g satisfying only the framework's consumer-risk restriction.",
         "#E83E8C",
     ),
@@ -241,7 +241,7 @@ with st.expander("Phase 7 — Six risks and three evaluation sums", expanded=exp
     )
     st.markdown("**Output of this phase:** the complete candidate-level research dataset.")
 
-with st.expander("Phase 8 — Consumer-risk-only selection of the smallest feasible g*", expanded=expand_all):
+with st.expander("Phase 8 — Consumer-risk-only selection of the smallest feasible g⁎", expanded=expand_all):
     st.latex(r"g_C^*=\min\{g\in\{1,\ldots,500\}:CR(g)\le\beta_0\}")
     st.latex(r"g_A^*=\min\{g\in\{1,\ldots,500\}:ACR(g)\le\beta_0\}")
     st.latex(r"g_B^*=\min\{g\in\{1,\ldots,500\}:BCR(g)\le\beta_0\}")

@@ -26,8 +26,8 @@ if data.empty:
     st.stop()
 
 metric_options = {
-    "Selected g*": "selected_g",
-    "Selected n*": "selected_n",
+    "Selected g⁎": "selected_g",
+    "Selected n⁎": "selected_n",
     "L(p₁)": "l_p1",
     "PR": "pr",
     "APR": "apr",
@@ -96,7 +96,20 @@ with right:
     )
     figure.update_layout(barmode="stack")
     figure = apply_academic_layout(figure, "")
-    figure.update_layout(title=None, margin={"l": 55, "r": 25, "t": 110, "b": 55})
+    figure.update_layout(
+        title=None,
+        legend={
+            "title_text": "",
+            "orientation": "h",
+            "yanchor": "top",
+            "y": -0.28,
+            "xanchor": "center",
+            "x": 0.5,
+            "font": {"size": 9},
+            "itemsizing": "constant",
+        },
+        margin={"l": 55, "r": 25, "t": 35, "b": 110},
+    )
     st.plotly_chart(figure, width="stretch")
     st.caption(
         f"Mean paired difference ({first} − {second}): {difference.mean():.8g}; "

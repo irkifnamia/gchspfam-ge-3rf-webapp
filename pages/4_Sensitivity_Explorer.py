@@ -31,8 +31,8 @@ dimension_options = {
     "GChSP pair (r, i)": ["group_size_r", "chain_parameter_i"],
 }
 metric_options = {
-    "Selected g*": "selected_g",
-    "Selected n*": "selected_n",
+    "Selected g⁎": "selected_g",
+    "Selected n⁎": "selected_n",
     "L(p₁)": "l_p1",
     "Own producer risk": "framework_producer_risk",
     "Own consumer risk": "framework_consumer_risk",

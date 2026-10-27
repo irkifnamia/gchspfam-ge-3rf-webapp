@@ -85,9 +85,9 @@ producer_column, consumer_column, sum_column, producer_label, consumer_label, su
 st.subheader("Selected plan at a glance")
 metrics = st.columns(6)
 metrics[0].metric("Framework", framework)
-metrics[1].metric("Selected groups g*", f"{selected_g}")
+metrics[1].metric("Selected groups g⁎", f"{selected_g}")
 metrics[2].metric("Items per group r", f"{r}")
-metrics[3].metric("Required sample n*", f"{selected_n}")
+metrics[3].metric("Required sample n⁎", f"{selected_n}")
 metrics[4].metric(f"Own consumer risk ({consumer_label})", f"{float(plan[consumer_column]):.6f}")
 metrics[5].metric("Consumer-risk margin", f"{float(plan['consumer_risk_margin']):.6f}")
 
@@ -111,12 +111,12 @@ with right:
         [
             ("Scenario", plan["scenario_id"], "Validated experimental scenario"),
             ("Prior", plan["prior_id"], "Used by Average and Bayesian risks"),
-            ("Framework", framework, "Consumer-risk restriction used for g*"),
+            ("Framework", framework, "Consumer-risk restriction used to select g⁎"),
             ("GE shape λ", f"{float(plan['ge_shape']):g}", "Lifetime-distribution shape"),
             ("Mean-life ratio ρA", f"{float(plan['acceptable_mean_life_ratio']):g}", "Acceptable quality point"),
-            ("Termination a", f"{a:g}", "Test time multiplier in t₀=aμ₀"),
-            ("Plan (g*, r, i)", f"({selected_g}, {r}, {i})", "Groups, items/group, preceding lots"),
-            ("Sample size n*", f"{selected_n}", "n*=r×g*"),
+            ("Termination multiplier a", f"{a:g}", "Test termination time: t₀ = a × μ₀"),
+            ("Plan (g⁎, r, i)", f"({selected_g}, {r}, {i})", "Groups, items per group, preceding lots"),
+            ("Sample size n⁎", f"{selected_n}", "n⁎ = r × g⁎"),
             ("p₁", f"{float(plan['p1']):.10f}", "Failure probability at acceptable quality"),
             ("p₂", f"{float(plan['p2']):.10f}", "Failure probability at limiting quality"),
         ],
@@ -125,28 +125,12 @@ with right:
     st.markdown("#### Plan specification matrix")
     st.dataframe(plan_matrix, width="stretch", hide_index=True)
 
-st.subheader("Plan risk profile")
 risk_profile = pd.DataFrame(
     {
-        "Measure": [f"Own producer risk ({producer_label})", f"Own consumer risk ({consumer_label})", sum_label],
+        "Measure": [producer_label, consumer_label, sum_label],
         "Value": [float(plan[producer_column]), float(plan[consumer_column]), float(plan[sum_column])],
     }
 )
-risk_figure = px.bar(
-    risk_profile,
-    x="Value",
-    y="Measure",
-    orientation="h",
-    text_auto=".6f",
-    color="Measure",
-    color_discrete_sequence=[FRAMEWORK_COLORS[framework], "#C9A227", "#8090A0"],
-)
-risk_figure.update_layout(showlegend=False)
-st.plotly_chart(apply_academic_layout(risk_figure, f"{framework} framework risk measures"), width="stretch")
-st.caption(
-    f"Only {consumer_label}≤0.10 selected g*. {producer_label} and {sum_label} are performance measures and did not constrain selection."
-)
-
 oc_scope = fixed_oc[
     (fixed_oc["prior_id"] == plan["prior_id"])
     & (fixed_oc["ge_shape"] == plan["ge_shape"])
@@ -156,36 +140,32 @@ oc_scope = fixed_oc[
     & (fixed_oc["framework"] == framework)
 ].sort_values("evaluation_mean_life_ratio", kind="stable")
 
+st.subheader("Plan risk profile and acceptance matrix")
+risk_panel, acceptance_panel = st.columns(2)
+with risk_panel:
+    risk_figure = px.bar(
+        risk_profile,
+        x="Measure",
+        y="Value",
+        text_auto=".6f",
+        color="Measure",
+        color_discrete_sequence=[FRAMEWORK_COLORS[framework], "#C9A227", "#8090A0"],
+        labels={"Measure": "Risk measure", "Value": "Risk value"},
+    )
+    risk_figure.update_layout(showlegend=False)
+    risk_figure = apply_academic_layout(risk_figure, f"{framework} framework risk measures")
+    risk_figure.update_layout(margin={"l": 55, "r": 25, "t": 90, "b": 65})
+    st.plotly_chart(risk_figure, width="stretch")
+    st.caption(
+        f"Only {consumer_label} ≤ 0.10 selected g⁎. {producer_label} and {sum_label} are "
+        "performance measures and did not constrain selection."
+    )
+
 if oc_scope.empty:
-    st.warning("No fixed-plan OC evaluations were found for this plan.")
+    with acceptance_panel:
+        st.warning("No fixed-plan OC evaluations were found for this plan.")
 else:
-    st.subheader("Operating characteristic across mean-life ratios")
-    chart, matrix_panel = st.columns([1.45, 1])
-    with chart:
-        oc_figure = px.line(
-            oc_scope,
-            x="evaluation_mean_life_ratio",
-            y="l_p",
-            markers=True,
-            color_discrete_sequence=[FRAMEWORK_COLORS[framework]],
-            hover_data={"failure_probability_p": ":.10f", "selected_g": True, "selected_n": True},
-            labels={
-                "evaluation_mean_life_ratio": "Mean-life ratio ρ",
-                "l_p": "Acceptance probability L(p)",
-            },
-        )
-        oc_figure.update_yaxes(range=[0, 1])
-        oc_figure.add_vline(
-            x=float(plan["acceptable_mean_life_ratio"]),
-            line_dash="dot",
-            line_color="#A33A3A",
-            annotation_text="Design ρA",
-        )
-        st.plotly_chart(
-            apply_academic_layout(oc_figure, "Fixed selected plan: L(p) across mean-life ratios"),
-            width="stretch",
-        )
-    with matrix_panel:
+    with acceptance_panel:
         heatmap_matrix = oc_scope.pivot_table(
             index="framework",
             columns="evaluation_mean_life_ratio",
@@ -200,7 +180,10 @@ else:
             color_continuous_scale="Blues",
             labels={"x": "Mean-life ratio ρ", "y": "", "color": "L(p)"},
         )
-        heatmap.update_layout(margin={"l": 20, "r": 15, "t": 45, "b": 30})
+        heatmap.update_layout(
+            title={"text": "Acceptance probability L(p)", "x": 0.02, "xanchor": "left"},
+            margin={"l": 35, "r": 20, "t": 90, "b": 65},
+        )
         st.plotly_chart(heatmap, width="stretch")
 
     oc_matrix = oc_scope[
@@ -215,8 +198,8 @@ else:
         columns={
             "evaluation_mean_life_ratio": "Mean-life ratio ρ",
             "failure_probability_p": "Failure probability p",
-            "selected_g": "Selected g*",
-            "selected_n": "Sample size n*",
+            "selected_g": "Selected g⁎",
+            "selected_n": "Sample size n⁎",
             "l_p": "Acceptance probability L(p)",
         }
     )
