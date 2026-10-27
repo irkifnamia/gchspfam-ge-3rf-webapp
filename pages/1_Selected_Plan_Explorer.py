@@ -26,22 +26,22 @@ if selected.empty:
     st.warning("No selected plans match the active global filters.")
     st.stop()
 
-st.subheader("Choose one sampling plan")
-with st.form("industry_plan_selector"):
-    first_row = st.columns(4)
-    framework = first_row[0].selectbox("Risk framework", list(FRAMEWORKS))
-    prior_id = first_row[1].selectbox("Beta prior", sorted(selected["prior_id"].unique()))
-    ratio = first_row[2].selectbox(
-        "Acceptable mean-life ratio ρA", sorted(selected["acceptable_mean_life_ratio"].unique())
-    )
-    termination = first_row[3].selectbox(
-        "Termination multiplier a", sorted(selected["termination_multiplier"].unique())
-    )
-    second_row = st.columns(3)
-    shape = second_row[0].selectbox("GE shape λ", sorted(selected["ge_shape"].unique()))
-    group_size = second_row[1].selectbox("Items per group r", sorted(selected["group_size_r"].unique()))
-    chain = second_row[2].selectbox("Preceding lots i", sorted(selected["chain_parameter_i"].unique()))
-    apply_plan = st.form_submit_button("Review this sampling plan", type="primary")
+with st.expander("Choose one sampling plan", expanded=False):
+    with st.form("industry_plan_selector"):
+        first_row = st.columns(4)
+        framework = first_row[0].selectbox("Risk framework", list(FRAMEWORKS))
+        prior_id = first_row[1].selectbox("Beta prior", sorted(selected["prior_id"].unique()))
+        ratio = first_row[2].selectbox(
+            "Acceptable mean-life ratio ρA", sorted(selected["acceptable_mean_life_ratio"].unique())
+        )
+        termination = first_row[3].selectbox(
+            "Termination multiplier a", sorted(selected["termination_multiplier"].unique())
+        )
+        second_row = st.columns(3)
+        shape = second_row[0].selectbox("GE shape λ", sorted(selected["ge_shape"].unique()))
+        group_size = second_row[1].selectbox("Items per group r", sorted(selected["group_size_r"].unique()))
+        chain = second_row[2].selectbox("Preceding lots i", sorted(selected["chain_parameter_i"].unique()))
+        apply_plan = st.form_submit_button("Review this sampling plan", type="primary")
 
 form_selection = {
     "framework": framework,
@@ -119,8 +119,8 @@ with right:
             ("Termination multiplier a", f"{a:g}", "Test termination time: t₀ = a × μ₀"),
             ("Plan (g⁎, r, i)", f"({selected_g}, {r}, {i})", "Groups, items per group, preceding lots"),
             ("Sample size n⁎", f"{selected_n}", "n⁎ = r × g⁎"),
-            ("p₁", f"{float(plan['p1']):.10f}", "Failure probability at acceptable quality"),
-            ("p₂", f"{float(plan['p2']):.10f}", "Failure probability at limiting quality"),
+            ("p₁", f"{float(plan['p1']):.10f}", "Fraction defective at acceptable quality"),
+            ("p₂", f"{float(plan['p2']):.10f}", "Fraction defective at limiting quality"),
         ],
         columns=["Plan element", "Selected value", "Operational meaning"],
     )
@@ -199,7 +199,7 @@ else:
     ].rename(
         columns={
             "evaluation_mean_life_ratio": "Mean-life ratio ρ",
-            "failure_probability_p": "Failure probability p",
+            "failure_probability_p": "Fraction defective p",
             "selected_g": "Selected g⁎",
             "selected_n": "Sample size n⁎",
             "l_p": "Acceptance probability L(p)",
@@ -211,7 +211,7 @@ else:
         width="stretch",
         hide_index=True,
         column_config={
-            "Failure probability p": st.column_config.NumberColumn(format="%.10f"),
+            "Fraction defective p": st.column_config.NumberColumn(format="%.10f"),
             "Acceptance probability L(p)": st.column_config.NumberColumn(format="%.10f"),
         },
     )
@@ -229,7 +229,7 @@ else:
         y="l_p",
         hover_data={"failure_probability_p": ":.4f", "l_p": ":.6f"},
         labels={
-            "failure_probability_p": "Failure probability p",
+            "failure_probability_p": "Fraction defective p",
             "l_p": "Acceptance probability L(p)",
         },
         color_discrete_sequence=[FRAMEWORK_COLORS[framework]],

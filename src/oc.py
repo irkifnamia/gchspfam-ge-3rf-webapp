@@ -13,7 +13,7 @@ def gchsp_acceptance_probability(
     r: int,
     i: int,
 ) -> NDArray[np.float64]:
-    r"""Return the GChSP acceptance probability over failure probabilities ``p``.
+    r"""Return the GChSP acceptance probability over fraction-defective values ``p``.
 
     The implemented research definition is
 

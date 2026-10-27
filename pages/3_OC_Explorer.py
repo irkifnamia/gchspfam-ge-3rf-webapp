@@ -53,6 +53,7 @@ figure = px.line(
         "evaluation_mean_life_ratio": "Evaluation mean-life ratio ρ",
         "l_p": "Acceptance probability L(p)",
         "framework": "Selected by",
+        "failure_probability_p": "Fraction defective p",
     },
 )
 st.plotly_chart(
@@ -90,7 +91,7 @@ oc_figure = px.line(
     category_orders={"framework": list(FRAMEWORK_COLORS)},
     hover_data={"selected_g": True, "failure_probability_p": ":.4f", "l_p": ":.6f"},
     labels={
-        "failure_probability_p": "Failure probability p",
+        "failure_probability_p": "Fraction defective p",
         "l_p": "Acceptance probability L(p)",
         "framework": "Selected by",
         "selected_g": "Selected g*",

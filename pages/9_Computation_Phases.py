@@ -17,9 +17,9 @@ st.markdown(
     r"""
 | Phase | Input used by the computation | Calculation performed | Result passed forward |
 |---|---|---|---|
-| **3 — OC formulation** | Candidate plan parameters $(g,r,i)$ and failure probability $p$ | Define the probability that the current lot is accepted under the group-chain rule | One OC expression used by every risk framework |
+| **3 — OC formulation** | Candidate plan parameters $(g,r,i)$ and fraction defective $p$ | Define the probability that the current lot is accepted under the group-chain rule | One OC expression used by every risk framework |
 | **4 — $P_0$ and $P_1$** | Binomial failure counts for $n=gr$ items | Derive the zero-failure and one-failure contributions and evaluate them for $g=1,\ldots,500$ | Candidate-level $L_g(p)$ values |
-| **5 — Fraction defective** | GE shape $\lambda$, termination multiplier $a$, and mean-life ratio $\rho$ | Convert lifetime assumptions into $p_1$ and $p_2$ using the corrected GE mean–scale relationship | Quality-point failure probabilities for 576 design scenarios |
+| **5 — Fraction defective** | GE shape $\lambda$, termination multiplier $a$, and mean-life ratio $\rho$ | Convert lifetime assumptions into $p_1$ and $p_2$ using the corrected GE mean–scale relationship | Quality-point fraction-defective values for 576 design scenarios |
 | **6 — Inputs and priors** | Nine prior mean/SD pairs and 576 scenarios | Convert prior moments to Beta shapes and pair each prior with every scenario | 5,184 prior–scenario analysis units |
 | **7 — Risk computation** | $L_g(p)$, $p_1$, $p_2$, and the Beta prior | Compute PR, CR, APR, ACR, BPR, BCR and the three descriptive sums for every candidate $g$ | 2,592,000 complete candidate records |
 | **8 — Selection of $g^*$** | Framework-specific consumer risk for $g=1,\ldots,500$ | Select the first integer satisfying the 0.10 consumer-risk ceiling separately for each framework | 15,552 selected-plan records |
@@ -31,7 +31,7 @@ st.caption("Open each phase below for the formula, computational action, and res
 with st.expander("Phase 3 — OC function formulation", expanded=expand_all):
     st.markdown(
         "For a GChSP plan with number of groups $g$, items per group $r$, and chain parameter $i$, acceptance is "
-        "formed from the zero-failure probability in the current lot and the one-failure probability combined with "
+        "formed from the probability of zero failures in the current lot and the probability of exactly one failure combined with "
         "zero failures in the preceding $i$ lots."
     )
     st.latex(r"L_g(p)=P_0(p)+P_1(p)\,[P_0(p)]^i")

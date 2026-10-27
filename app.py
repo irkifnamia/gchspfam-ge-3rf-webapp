@@ -99,14 +99,14 @@ with st.expander("Research question and mathematical model", expanded=True):
         - **Chain information:** when exactly one failure occurs, also examine the outcomes of
           the preceding $i$ lots.
         - **GE conversion:** use the corrected GE model to convert the mean-life ratio into the
-          item failure probability $p$.
+          fraction defective $p$.
         - **Acceptance probability:** evaluate $p$ using the complete GChSP operating-
           characteristic function $L_g(p)$.
         """
     )
     formula_columns = st.columns(2)
     with formula_columns[0]:
-        st.caption("Corrected GE failure probability")
+        st.caption("Corrected GE fraction defective")
         st.latex(r"p(\rho;a,\lambda)=\left[1-\exp\left(-\frac{aH_\lambda}{\rho}\right)\right]^\lambda")
         st.latex(r"H_\lambda=\psi(\lambda+1)-\psi(1)")
     with formula_columns[1]:
@@ -148,7 +148,7 @@ with st.expander("Design Parameters & Scenario ID", expanded=False):
 with st.expander("Nine fixed Beta prior combinations", expanded=False):
     st.markdown(
         r"""
-        - $p$ is the uncertain lot failure probability before observing the current lot.
+        - $p$ is the uncertain lot fraction defective before observing the current lot.
         - The subscript $\pi$ means **prior distribution**; it is not the mathematical constant
           $\pi=3.14159\ldots$.
         - $\mu_\pi$ is the specified prior mean of $p$.
@@ -284,7 +284,7 @@ with framework_columns[0]:
         """
         **Classical**
 
-        Evaluates producer and consumer risks at two fixed failure probabilities representing
+        Evaluates producer and consumer risks at two fixed values of the fraction defective representing
         acceptable and limiting quality. It does not use a Beta prior.
         """
     )
